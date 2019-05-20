@@ -1,2 +1,2 @@
-useDynLib(lookupmodiftracer, .registration = TRUE, .fixes = "C_")
+useDynLib(dynamismtracer, .registration = TRUE, .fixes = "C_")
 exportPattern("^[[:alpha:]]+")
