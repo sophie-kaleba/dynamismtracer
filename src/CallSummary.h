@@ -1,5 +1,5 @@
-#ifndef TURBOTRACER_CALL_SUMMARY_H
-#define TURBOTRACER_CALL_SUMMARY_H
+#ifndef DYNAMISMTRACER_CALL_SUMMARY_H
+#define DYNAMISMTRACER_CALL_SUMMARY_H
 
 #include "Call.h"
 
@@ -46,7 +46,6 @@ class CallSummary {
 
     int get_call_arg_count() const {
         return call_arg_count_;
-
     }
 
     bool try_to_merge(const Call* const call) {
@@ -70,13 +69,13 @@ class CallSummary {
 
     bool is_mergeable_(const Call* const call) const {
         return (get_force_order() == call->get_force_order() &&
-                    get_missing_argument_positions() ==
-                        call->get_missing_argument_positions() &&
-                    is_jumped() == call->is_jumped() &&
-                    get_return_value_type() == call->get_return_value_type(),
-                is_S3_method() == call->is_S3_method(),
+                get_missing_argument_positions() ==
+                    call->get_missing_argument_positions() &&
+                is_jumped() == call->is_jumped() &&
+                get_return_value_type() == call->get_return_value_type() &&
+                is_S3_method() == call->is_S3_method() &&
                 is_S4_method() == call->is_S4_method());
     }
 };
 
-#endif /* TURBOTRACER_CALL_SUMMARY_H */
+#endif /* DYNAMISMTRACER_CALL_SUMMARY_H */

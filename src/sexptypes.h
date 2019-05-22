@@ -1,5 +1,5 @@
-#ifndef TURBOTRACER_SEXPTYPES_H
-#define TURBOTRACER_SEXPTYPES_H
+#ifndef DYNAMISMTRACER_SEXPTYPES_H
+#define DYNAMISMTRACER_SEXPTYPES_H
 
 #include "stdlibs.h"
 
@@ -15,4 +15,4 @@ sexptype_t type_of_sexp(SEXP value);
 std::string sexptype_to_string(sexptype_t);
 std::string value_type_to_string(SEXP value);
 
-#endif /* TURBOTRACER_SEXPTYPES_H */
+#endif /* DYNAMISMTRACER_SEXPTYPES_H */

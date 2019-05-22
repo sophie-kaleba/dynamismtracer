@@ -1,5 +1,5 @@
-#ifndef PROMISEDYNTRACER_UTILITIES_H
-#define PROMISEDYNTRACER_UTILITIES_H
+#ifndef DYNAMISMTRACER_UTILITIES_H
+#define DYNAMISMTRACER_UTILITIES_H
 
 #include "constants.h"
 #include "definitions.h"
@@ -7,21 +7,6 @@
 
 #include <openssl/evp.h>
 #include <type_traits>
-
-#define failwith(format, ...) \
-    failwith_impl(__FILE__, __LINE__, format, __VA_ARGS__)
-
-#define failwith_impl(file, line, format, ...)                             \
-    do {                                                                   \
-        fprintf(stderr, "ERROR [%s:%d] " format, file, line, __VA_ARGS__); \
-        exit(EXIT_FAILURE);                                                \
-    } while (0)
-
-int get_file_size(std::ifstream& file);
-
-std::string readfile(std::ifstream& file);
-
-bool file_exists(const std::string& filepath);
 
 char* copy_string(char* destination, const char* source, size_t buffer_size);
 
@@ -39,37 +24,6 @@ std::string serialize_r_expression(SEXP e);
 
 std::string clock_ticks_to_string(clock_t ticks);
 std::string to_string(const char* str);
-
-inline std::string check_string(const char* s) {
-    return s == NULL ? "<unknown>" : s;
-}
-
-inline void* malloc_or_die(std::size_t size) {
-    void* data = std::malloc(size);
-    if (data == nullptr) {
-        failwith("memory allocation error: unable to allocate %zu bytes.\n",
-                 size);
-    }
-    return data;
-}
-
-inline void* calloc_or_die(std::size_t num, std::size_t size) {
-    void* data = std::calloc(num, size);
-    if (data == nullptr) {
-        failwith("memory allocation error: unable to allocate %zu bytes.\n",
-                 size);
-    }
-    return data;
-}
-
-inline void* realloc_or_die(void* ptr, std::size_t size) {
-    void* data = std::realloc(ptr, size);
-    if (data == nullptr) {
-        failwith("memory allocation error: unable to reallocate %zu bytes.\n",
-                 size);
-    }
-    return data;
-}
 
 inline bool timestamp_is_undefined(const timestamp_t timestamp) {
     return timestamp == UNDEFINED_TIMESTAMP;
@@ -108,4 +62,4 @@ constexpr auto to_underlying(E e) noexcept {
     return static_cast<std::underlying_type_t<E>>(e);
 }
 
-#endif /* PROMISEDYNTRACER__UTILITIES_H */
+#endif /* DYNAMISMTRACER__UTILITIES_H */

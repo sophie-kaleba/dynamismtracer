@@ -1,5 +1,5 @@
-#ifndef TURBOTRACER_ENVIRONMENT_H
-#define TURBOTRACER_ENVIRONMENT_H
+#ifndef DYNAMISMTRACER_ENVIRONMENT_H
+#define DYNAMISMTRACER_ENVIRONMENT_H
 
 #include <unordered_map>
 
@@ -55,4 +55,4 @@ class Environment {
     std::unordered_map<std::string, Variable> variable_mapping_;
 };
 
-#endif /* TURBOTRACER_ENVIRONMENT_H */
+#endif /* DYNAMISMTRACER_ENVIRONMENT_H */

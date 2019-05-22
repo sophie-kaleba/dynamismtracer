@@ -1,5 +1,5 @@
-#ifndef PROMISEDYNTRACER_CONSTANTS_H
-#define PROMISEDYNTRACER_CONSTANTS_H
+#ifndef DYNAMISMTRACER_CONSTANTS_H
+#define DYNAMISMTRACER_CONSTANTS_H
 
 #include "definitions.h"
 
@@ -38,4 +38,4 @@ extern const unsigned int OBJECT_TYPE_TABLE_COUNT;
 extern const scope_t UNASSIGNED_SCOPE;
 extern const scope_t TOP_LEVEL_SCOPE;
 
-#endif /* PROMISEDYNTRACER_CONSTANTS_H */
+#endif /* DYNAMISMTRACER_CONSTANTS_H */
