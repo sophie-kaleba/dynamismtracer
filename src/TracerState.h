@@ -20,7 +20,7 @@ private:
   const bool truncate_;
   const bool binary_;
   const int compression_level_;
-
+  
 public:
   TracerState(const std::string& output_dirpath,
               bool verbose,
@@ -45,14 +45,14 @@ public:
       truncate_,
       binary_,
       compression_level_);
-
+    
     object_counts_data_table_ =
       create_data_table(output_dirpath_ + "/" + "object_counts",
       {"type", "count"},
       truncate_,
       binary_,
       compression_level_);
-
+    
     call_summaries_data_table_ =
       create_data_table(output_dirpath_ + "/" + "call_summaries",
       {"function_id",
@@ -68,12 +68,12 @@ public:
        "return_value_type",
        "jumped",
        "call_count",
-       "call_arg_count"},
+       "dyn_call_count"},
        truncate_,
        binary_,
        compression_level_);
-
-
+    
+    
     function_definitions_data_table_ =
       create_data_table(output_dirpath_ + "/" + "function_definitions",
       {"function_id",
@@ -85,7 +85,7 @@ public:
        truncate_,
        binary_,
        compression_level_);
-
+    
     arguments_data_table_ =
       create_data_table(output_dirpath_ + "/" + "arguments",
       {"call_id",
@@ -114,7 +114,7 @@ public:
        truncate_,
        binary_,
        compression_level_);
-
+    
     side_effects_data_table_ =
       create_data_table(output_dirpath_ + "/" + "side_effects",
       {"value_id",
@@ -141,7 +141,7 @@ public:
        truncate_,
        binary_,
        compression_level_);
-
+    
     escaped_arguments_data_table_ = create_data_table(
       output_dirpath_ + "/" + "escaped_arguments",
       {"call_id",
@@ -209,7 +209,7 @@ public:
        truncate_,
        binary_,
        compression_level_);
-
+    
     promises_data_table_ =
       create_data_table(output_dirpath_ + "/" + "promises",
       {"value_id",
@@ -236,7 +236,7 @@ public:
        truncate_,
        binary_,
        compression_level_);
-
+    
     promise_lifecycles_data_table_ =
       create_data_table(output_dirpath_ + "/" + "promise_lifecycles",
       {"action", "count", "promise_count"},
@@ -244,7 +244,7 @@ public:
       binary_,
       compression_level_);
   }
-
+  
   ~TracerState() {
     delete event_counts_data_table_;
     delete object_counts_data_table_;
@@ -256,56 +256,56 @@ public:
     delete escaped_arguments_data_table_;
     delete promise_lifecycles_data_table_;
   }
-
+  
   const std::string& get_output_dirpath() const {
     return output_dirpath_;
   }
-
+  
   bool get_truncate() const {
     return truncate_;
   }
-
+  
   bool is_verbose() const {
     return verbose_;
   }
-
+  
   bool is_binary() const {
     return binary_;
   }
-
+  
   int get_compression_level() const {
     return compression_level_;
   }
-
+  
   void initialize() const {
     serialize_configuration_();
   }
-
+  
   void cleanup(int error) {
     for (auto const& binding: promises_) {
       destroy_promise(binding.second);
     }
-
+    
     promises_.clear();
-
+    
     for (auto const& binding: function_cache_) {
       destroy_function_(binding.second);
     }
-
+    
     functions_.clear();
-
+    
     function_cache_.clear();
-
+    
     serialize_event_counts_();
-
+    
     serialize_object_count_();
-
+    
     serialize_promise_lifecycle_summary_();
-
+    
     if (!get_stack_().is_empty()) {
       dyntrace_log_error("stack not empty on tracer exit.")
     }
-
+    
     if (error) {
       std::ofstream error_file(get_output_dirpath() + "/ERROR");
       error_file << "ERROR";
@@ -316,30 +316,30 @@ public:
       noerror_file.close();
     }
   }
-
+  
   void increment_object_count(sexptype_t type) {
     ++object_count_[type];
   }
-
+  
 private:
   DataTableStream* event_counts_data_table_;
   DataTableStream* object_counts_data_table_;
   DataTableStream* promises_data_table_;
   DataTableStream* promise_lifecycles_data_table_;
-
+  
   void serialize_configuration_() const {
     std::ofstream fout(get_output_dirpath() + "/CONFIGURATION",
                        std::ios::trunc);
-
+    
     auto serialize_row = [&fout](const std::string& key,
                                  const std::string& value) {
       fout << key << "=" << value << std::endl;
     };
-
+    
     for (const std::string& envvar: ENVIRONMENT_VARIABLES) {
       serialize_row(envvar, to_string(getenv(envvar.c_str())));
     }
-
+    
     serialize_row("GIT_COMMIT_INFO", GIT_COMMIT_INFO);
     serialize_row("truncate", std::to_string(get_truncate()));
     serialize_row("verbose", std::to_string(is_verbose()));
@@ -347,7 +347,7 @@ private:
     serialize_row("compression_level",
                   std::to_string(get_compression_level()));
   }
-
+  
   void serialize_event_counts_() {
     for (int i = 0; i < to_underlying(Event::COUNT); ++i) {
       event_counts_data_table_->write_row(
@@ -355,7 +355,7 @@ private:
           static_cast<double>(event_counter_[i]));
     }
   }
-
+  
   void serialize_object_count_() {
     for (int i = 0; i < object_count_.size(); ++i) {
       if (object_count_[i] != 0) {
@@ -365,15 +365,15 @@ private:
       }
     }
   }
-
-
+  
+  
   ExecutionContextStack stack_;
-
+  
 public:
   ExecutionContextStack& get_stack_() {
     return stack_;
   }
-
+  
   Environment& create_environment(const SEXP rho) {
     auto iter = environment_mapping_.find(rho);
     if (iter != environment_mapping_.end()) {
@@ -383,11 +383,11 @@ public:
       .insert({rho, Environment(rho, create_next_environment_id_())})
       .first->second;
   }
-
+  
   void remove_environment(const SEXP rho) {
     environment_mapping_.erase(rho);
   }
-
+  
   Environment& lookup_environment(const SEXP rho, bool create = true) {
     auto iter = environment_mapping_.find(rho);
     if (iter == environment_mapping_.end()) {
@@ -395,7 +395,7 @@ public:
     }
     return iter->second;
   }
-
+  
   Variable& lookup_variable(const SEXP rho,
                             const SEXP symbol,
                             bool create_environment = true,
@@ -403,23 +403,23 @@ public:
     return lookup_variable(
       rho, symbol_to_string(symbol), create_environment, create_variable);
   }
-
+  
   Variable& lookup_variable(const SEXP rho,
                             const std::string& symbol,
                             bool create_environment = true,
                             bool create_variable = true) {
     Environment& env = lookup_environment(rho, create_environment);
-
+    
     bool var_exists = env.exists(symbol);
-
+    
     if (create_variable && !var_exists) {
       return env.define(
         symbol, create_next_variable_id_(), UNDEFINED_TIMESTAMP);
     }
-
+    
     return env.lookup(symbol);
   }
-
+  
   Variable& define_variable(const SEXP rho,
                             const SEXP symbol,
                             bool create_environment = true) {
@@ -427,7 +427,7 @@ public:
                               create_next_variable_id_(),
                               get_current_timestamp_());
   }
-
+  
   Variable& update_variable(const SEXP rho,
                             const SEXP symbol,
                             bool create_environment = true,
@@ -436,32 +436,32 @@ public:
     var.set_modification_timestamp(get_current_timestamp_());
     return var;
   }
-
+  
   Variable remove_variable(const SEXP rho,
                            const SEXP symbol,
                            bool create_environment = true) {
     return lookup_environment(rho, create_environment)
     .remove(symbol_to_string(symbol));
   }
-
+  
 private:
   env_id_t create_next_environment_id_() {
     return environment_id_++;
   }
-
+  
   var_id_t create_next_variable_id_() {
     return variable_id_++;
   }
-
+  
   env_id_t environment_id_;
   var_id_t variable_id_;
   std::unordered_map<SEXP, Environment> environment_mapping_;
-
+  
 public:
   void resume_execution_timer() {
     execution_resume_time_ = std::chrono::high_resolution_clock::now();
   }
-
+  
   void pause_execution_timer() {
     auto execution_pause_time = std::chrono::high_resolution_clock::now();
     std::uint64_t execution_time =
@@ -473,7 +473,7 @@ public:
           stack.peek(1).increment_execution_time(execution_time);
         }
   }
-
+  
   ExecutionContext pop_stack() {
     ExecutionContextStack& stack(get_stack_());
     ExecutionContext exec_ctxt(stack.pop());
@@ -483,24 +483,24 @@ public:
     }
     return exec_ctxt;
   }
-
+  
   template <typename T>
   void push_stack(T* context) {
     get_stack_().push(context);
   }
-
+  
   execution_contexts_t unwind_stack(const RCNTXT* context) {
     return get_stack_().unwind(ExecutionContext(context));
   }
-
+  
 private:
   std::chrono::time_point<std::chrono::high_resolution_clock>
   execution_resume_time_;
-
+  
   /***************************************************************************
    * PROMISE
    **************************************************************************/
-
+  
 public:
   DenotedValue* create_promise(const SEXP promise) {
     DenotedValue* promise_state(create_raw_promise_(promise, true));
@@ -508,13 +508,13 @@ public:
     promise_state->set_creation_timestamp(get_current_timestamp_());
     return promise_state;
   }
-
+  
   DenotedValue* lookup_promise(const SEXP promise,
                                bool create = false,
                                bool local = false) {
     // static int printed = 0;
     auto iter = promises_.find(promise);
-
+    
     /* all promises encountered are added to the map. Its not possible for
      a promise id to be encountered which is not already mapped.
      If this happens, possibly, the mapper methods are not the first to
@@ -543,15 +543,15 @@ public:
         return nullptr;
       }
     }
-
+    
     return iter->second;
   }
-
+  
   void remove_promise(const SEXP promise, DenotedValue* promise_state) {
     promises_.erase(promise);
     destroy_promise(promise_state);
   }
-
+  
   void destroy_promise(DenotedValue* promise_state) {
     /* here we delete a promise iff we are the only one holding a
      reference to it. A promise can be simultaneously held by
@@ -565,25 +565,25 @@ public:
      argument flag is set, it means the promise is held by a call
      and when that call gets deleted, it will delete this promise */
     promise_state->set_inactive();
-
+    
     serialize_promise_(promise_state);
-
+    
     summarize_promise_lifecycle_(promise_state->get_lifecycle());
-
+    
     if (promise_state->has_escaped()) {
       serialize_escaped_promise_(promise_state);
     }
-
+    
     if (!promise_state->is_argument()) {
       delete promise_state;
     }
   }
-
+  
 private:
   denoted_value_id_t get_next_denoted_value_id_() {
     return denoted_value_id_counter_++;
   }
-
+  
   void serialize_promise_(DenotedValue* promise) {
     promises_data_table_->write_row(
         promise->get_id(),
@@ -608,7 +608,7 @@ private:
         promise->get_environment_assign_count(),
         promise->get_execution_time());
   }
-
+  
   void serialize_escaped_promise_(DenotedValue* promise) {
     escaped_arguments_data_table_->write_row(
         promise->get_previous_call_id(),
@@ -677,40 +677,40 @@ private:
                     false),
                     promise->get_execution_time());
   }
-
+  
   DenotedValue* create_raw_promise_(const SEXP promise, bool local) {
     const SEXP rho = dyntrace_get_promise_environment(promise);
-
+    
     DenotedValue* promise_state =
       new DenotedValue(get_next_denoted_value_id_(), promise, local);
-
+    
     promise_state->set_creation_scope(infer_creation_scope());
-
+    
     /* Setting this bit tells us that the promise is currently in the
      promises table. As long as this is set, the call holding a reference
      to it will not delete it. */
     promise_state->set_active();
     return promise_state;
   }
-
+  
   std::unordered_map<SEXP, DenotedValue*> promises_;
   denoted_value_id_t denoted_value_id_counter_;
-
+  
 private:
   timestamp_t get_current_timestamp_() const {
     return timestamp_;
   }
-
+  
   timestamp_t increment_timestamp_() {
     return timestamp_++;
   }
-
+  
   timestamp_t timestamp_;
-
+  
 public:
   scope_t infer_creation_scope() {
     ExecutionContextStack& stack = get_stack_();
-
+    
     for (auto iter = stack.crbegin(); iter != stack.crend(); ++iter) {
       if (iter->is_call()) {
         const Function* const function =
@@ -725,13 +725,13 @@ public:
     }
     return TOP_LEVEL_SCOPE;
   }
-
+  
   scope_t infer_forcing_scope() {
     const ExecutionContextStack& stack = get_stack_();
-
+    
     for (auto iter = stack.crbegin(); iter != stack.crend(); ++iter) {
       const ExecutionContext& exec_ctxt = *iter;
-
+      
       if (exec_ctxt.is_r_context()) {
         continue;
       } else if (exec_ctxt.is_promise()) {
@@ -740,20 +740,20 @@ public:
         return exec_ctxt.get_call()->get_function_name();
       }
     }
-
+    
     return TOP_LEVEL_SCOPE;
   }
-
+  
   void exit_probe(const Event event) {
     resume_execution_timer();
   }
-
+  
   void enter_probe(const Event event) {
     pause_execution_timer();
     increment_timestamp_();
     ++event_counter_[to_underlying(event)];
   }
-
+  
 public:
   Call* create_call(const SEXP call,
                     const SEXP op,
@@ -763,7 +763,7 @@ public:
     Call* function_call = nullptr;
     call_id_t call_id = get_next_call_id_();
     const std::string function_name = get_name(call);
-
+    
     function_call = new Call(call_id, function_name, rho, function, args);
     
     if (TYPEOF(op) == CLOSXP) {
@@ -772,20 +772,19 @@ public:
       int eval = dyntrace_get_c_function_argument_evaluation(op);
       function_call->set_force_order(eval);
     }
-    function_call->process_calls_affecting_lookup();
     return function_call;
   }
-
+  
   void destroy_call(Call* call) {
     Function* function = call->get_function();
-
+    
     function->add_summary(call);
-
+    
     for (Argument* argument: call->get_arguments()) {
       serialize_argument_(argument);
-
+      
       DenotedValue* value = argument->get_denoted_value();
-
+      
       if (!value->is_active()) {
         delete value;
       } else {
@@ -796,20 +795,20 @@ public:
             call->get_function()->get_formal_parameter_count(),
             argument);
       }
-
+      
       argument->set_denoted_value(nullptr);
-
+      
       delete argument;
     }
-
+    
     delete call;
   }
-
+  
 private:
   call_id_t get_next_call_id_() {
     return ++call_id_counter_;
   }
-
+  
   void process_closure_argument_(Call* call,
                                  int formal_parameter_position,
                                  int actual_argument_position,
@@ -825,26 +824,26 @@ private:
         new DenotedValue(get_next_denoted_value_id_(), argument, false);
       value->set_creation_scope(infer_creation_scope());
     }
-
+    
     bool default_argument = true;
-
+    
     if (value->is_promise()) {
       default_argument =
         call->get_environment() == value->get_environment();
     }
-
+    
     Argument* arg = new Argument(call,
                                  formal_parameter_position,
                                  actual_argument_position,
                                  default_argument,
                                  dot_dot_dot);
     arg->set_denoted_value(value);
-
+    
     value->add_argument(arg);
-
+    
     call->add_argument(arg);
   }
-
+  
   void process_closure_arguments_(Call* call, const SEXP op) {
     SEXP formal = nullptr;
     SEXP name = nullptr;
@@ -852,26 +851,26 @@ private:
     SEXP rho = call->get_environment();
     int formal_parameter_position = -1;
     int actual_argument_position = -1;
-
+    
     for (formal = FORMALS(op); formal != R_NilValue; formal = CDR(formal)) {
       ++formal_parameter_position;
-
+      
       /* get argument name */
       name = TAG(formal);
       /* lookup argument in environment by name */
       argument = dyntrace_lookup_environment(rho, name);
-
+      
       switch (type_of_sexp(argument)) {
       case DOTSXP:
         for (SEXP dot_dot_dot_arguments = argument;
              dot_dot_dot_arguments != R_NilValue;
              dot_dot_dot_arguments = CDR(dot_dot_dot_arguments)) {
           ++actual_argument_position;
-
+          
           name = TAG(dot_dot_dot_arguments);
-
+          
           SEXP dot_dot_dot_argument = CAR(dot_dot_dot_arguments);
-
+          
           process_closure_argument_(call,
                                     formal_parameter_position,
                                     actual_argument_position,
@@ -880,7 +879,7 @@ private:
                                     true);
         }
         break;
-
+        
       default:
         ++actual_argument_position;
       process_closure_argument_(call,
@@ -893,12 +892,12 @@ private:
       }
     }
   }
-
+  
   void serialize_argument_(Argument* argument) {
     Call* call = argument->get_call();
     Function* function = call->get_function();
     DenotedValue* value = argument->get_denoted_value();
-
+    
     arguments_data_table_->write_row(
         call->get_id(),
         function->get_id(),
@@ -923,7 +922,7 @@ private:
         argument->does_non_local_return(),
         value->get_execution_time(),
         value->get_serialized_expression());
-
+    
     if (value->is_promise() && value->get_serialized_expression() != "") {
       side_effects_data_table_->write_row(
           value->get_id(),
@@ -949,29 +948,29 @@ private:
           value->get_serialized_expression());
     }
   }
-
+  
   DataTableStream* arguments_data_table_;
   DataTableStream* side_effects_data_table_;
   DataTableStream* escaped_arguments_data_table_;
-
+  
   /***************************************************************************
    * Function API
    ***************************************************************************/
 public:
   Function* lookup_function(const SEXP op) {
     Function* function = nullptr;
-
+    
     auto iter = functions_.find(op);
-
+    
     if (iter != functions_.end()) {
       return iter->second;
     }
-
+    
     const auto [package_name, function_definition, function_id] =
       Function::compute_definition_and_id(op);
-
+    
     auto iter2 = function_cache_.find(function_id);
-
+    
     if (iter2 == function_cache_.end()) {
       function = new Function(
         op, package_name, function_definition, function_id);
@@ -979,17 +978,60 @@ public:
     } else {
       function = iter2->second;
     }
-
+    
     functions_.insert({op, function});
     return function;
   }
-
+  
   void remove_function(const SEXP op) {
     auto it = functions_.find(op);
-
+    
     if (it != functions_.end()) {
       functions_.erase(it);
     }
+  }
+  
+
+  void update_dyn_call_counter(std::string expression_type, SEXP param, Call* fn_call) {
+    if (expression_type.compare("Function Call") == 0) {
+      std::string sym_name = CHAR(PRINTNAME(CAR(param)));
+      if (sym_name.compare("function") == 0) { 
+        fn_call->set_dyn_call_count(1);
+      }
+      else {fn_call->set_dyn_call_count(0);}
+    }
+    
+    else if (expression_type.compare("Symbol") == 0) {
+      // TODO- needs a hook
+      // this symbol could potentially point to a function. We need to inspect the environment to know        
+    }
+    
+    else {
+      fn_call->set_dyn_call_count(0);
+    }
+  }
+  
+  
+  void process_dynamic_calls_for_closures(std::string fn_name, Call* fn_call, int arg_index) {
+    Argument * arg =  fn_call->get_argument(arg_index);  
+    DenotedValue* value = arg->get_denoted_value();
+    std::string expression_type = sexptype_to_string(value->get_expression_type());
+    SEXP expr = value->get_expression();
+    
+    update_dyn_call_counter(expression_type, expr, fn_call);
+  }
+  
+  
+  /* f <<- 1+2
+   * op is <<-
+   * CAR(args) is the symbol f
+   * CDR(args) is a pairlist, whose 1st value is a function call - OLD
+   */
+  void process_dynamic_calls_for_specials(Call* fn_call){
+    SEXP fn_args = fn_call->get_args();
+    SEXP right_param = CADR(fn_args); // first element of the object pointed by the right parameter of <<-
+    std::string expression_type = value_type_to_string(right_param);
+    update_dyn_call_counter(expression_type, right_param, fn_call);
   }
 
 private:
@@ -997,23 +1039,23 @@ private:
     serialize_function_(function);
     delete function;
   }
-
+  
   DataTableStream* call_summaries_data_table_;
   DataTableStream* function_definitions_data_table_;
   std::unordered_map<SEXP, Function*> functions_;
   std::unordered_map<function_id_t, Function*> function_cache_;
-
+  
   void serialize_function_(Function* function) {
     const std::string all_names = function->get_name_string();
     serialize_function_call_summary_(function, all_names);
     serialize_function_definition_(function, all_names);
   }
-
+  
   void serialize_function_call_summary_(const Function* function,
                                         const std::string& names) {
     for (std::size_t i = 0; i < function->get_summary_count(); ++i) {
       const CallSummary& call_summary = function->get_call_summary(i);
-
+      
       call_summaries_data_table_->write_row(
           function->get_id(),
           function->get_namespace(),
@@ -1029,10 +1071,10 @@ private:
             sexptype_to_string(call_summary.get_return_value_type()),
             call_summary.is_jumped(),
             call_summary.get_call_count(),
-            call_summary.get_call_arg_count());
+            call_summary.get_total_dyn_call_count());
     }
   }
-
+  
   void serialize_function_definition_(const Function* function,
                                       const std::string& names) {
     function_definitions_data_table_->write_row(
@@ -1043,224 +1085,225 @@ private:
         function->is_byte_compiled(),
         function->get_definition());
   }
-
-public:
-  void identify_side_effect_creators(const Variable& var, const SEXP env) {
-    bool direct = true;
-    ExecutionContextStack& stack = get_stack_();
-
-    for (auto iter = stack.rbegin(); iter != stack.rend(); ++iter) {
-      ExecutionContext& exec_ctxt = *iter;
-
-      if (exec_ctxt.is_closure()) {
-        if (exec_ctxt.get_closure()->get_environment() == env) {
-          /* its normal for a function to mutate variables in its
-           own environment. this case is not interesting. */
-          return;
-        }
-      }
-
-      if (exec_ctxt.is_promise()) {
-        DenotedValue* promise = exec_ctxt.get_promise();
-
-        const SEXP prom_env = promise->get_environment();
-
-        const timestamp_t var_timestamp =
-          var.get_modification_timestamp();
-
-        if (prom_env == env) {
-          if (promise->get_creation_timestamp() > var_timestamp) {
-            promise->set_self_scope_mutation(direct);
-            direct = false;
-            return; // to remove
-          } else {
+  
+  public:
+    void identify_side_effect_creators(const Variable& var, const SEXP env) {
+      bool direct = true;
+      ExecutionContextStack& stack = get_stack_();
+      
+      for (auto iter = stack.rbegin(); iter != stack.rend(); ++iter) {
+        ExecutionContext& exec_ctxt = *iter;
+        
+        if (exec_ctxt.is_closure()) {
+          if (exec_ctxt.get_closure()->get_environment() == env) {
+            /* its normal for a function to mutate variables in its
+             own environment. this case is not interesting. */
             return;
           }
-        } else if (is_parent_environment(env, prom_env)) {
-          if (promise->get_creation_timestamp() > var_timestamp) {
-            /* if this happens, promise is causing side effect
+        }
+        
+        if (exec_ctxt.is_promise()) {
+          DenotedValue* promise = exec_ctxt.get_promise();
+          
+          const SEXP prom_env = promise->get_environment();
+          
+          const timestamp_t var_timestamp =
+            var.get_modification_timestamp();
+          
+          if (prom_env == env) {
+            if (promise->get_creation_timestamp() > var_timestamp) {
+              promise->set_self_scope_mutation(direct);
+              direct = false;
+              return; // to remove
+            } else {
+              return;
+            }
+          } else if (is_parent_environment(env, prom_env)) {
+            if (promise->get_creation_timestamp() > var_timestamp) {
+              /* if this happens, promise is causing side effect
+               in its lexically scoped environment. */
+              promise->set_lexical_scope_mutation(direct);
+              direct = false;
+              return; // to remove
+            } else {
+              return;
+            }
+          } else {
+            if (promise->get_creation_timestamp() > var_timestamp) {
+              /* if this happens, promise is causing side effect
+               in non lexically scoped environment */
+              promise->set_non_lexical_scope_mutation(direct);
+              direct = false;
+              return; // to remove
+            } else {
+              return;
+            }
+          }
+        }
+      }
+    }
+    
+    void identify_side_effect_observers(const Variable& var, const SEXP env) {
+      const timestamp_t var_timestamp = var.get_modification_timestamp();
+      
+      /* this implies we have not seen the variable before.
+       TODO - see when this case is triggered and ensure
+       there is no bug */
+      if (timestamp_is_undefined(var_timestamp)) {
+        return;
+      }
+      
+      /* if the modification timestamp of the variable is
+       greater than the creation timestamp of the promise,
+       then, that promise has identified a side effect */
+      
+      bool direct = true;
+      
+      ExecutionContextStack& stack = get_stack_();
+      
+      for (auto iter = stack.rbegin(); iter != stack.rend(); ++iter) {
+        ExecutionContext& exec_ctxt = *iter;
+        
+        /* If the most recent context that is responsible for this
+         side effect is a closure, then return. Currently, we only
+         care about promises directly responsible for side effects.
+         We don't return in case of specials and builtins because
+         they are more like operators in a programming language and
+         everything ultimately happens in them and returning on
+         encountering them will make it look like no promise has
+         caused a side effect. */
+        
+        if (exec_ctxt.is_closure()) {
+          if (exec_ctxt.get_closure()->get_environment() == env) {
+            /* its normal for a function to mutate variables in its
+             own environment. this case is not interesting. */
+            return;
+          }
+        }
+        
+        if (exec_ctxt.is_promise()) {
+          DenotedValue* promise = exec_ctxt.get_promise();
+          
+          const SEXP prom_env = promise->get_environment();
+          
+          if (prom_env == env) {
+            if (promise->get_creation_timestamp() < var_timestamp) {
+              promise->set_self_scope_observation(direct);
+              direct = false;
+              return; // to remove
+            } else {
+              /* return if the promise observes a variable in its
+               * environment created before it. */
+              return;
+            }
+          } else if (is_parent_environment(env, prom_env)) {
+            /* if this happens, promise is observing side effect
              in its lexically scoped environment. */
-            promise->set_lexical_scope_mutation(direct);
-            direct = false;
-            return; // to remove
+            if (promise->get_creation_timestamp() < var_timestamp) {
+              promise->set_lexical_scope_observation(direct);
+              direct = false;
+              return; // to remove
+            } else {
+              return;
+            }
           } else {
-            return;
-          }
-        } else {
-          if (promise->get_creation_timestamp() > var_timestamp) {
-            /* if this happens, promise is causing side effect
+            /* if this happens, promise is observing side effect
              in non lexically scoped environment */
-            promise->set_non_lexical_scope_mutation(direct);
-            direct = false;
-            return; // to remove
-          } else {
-            return;
+            if (promise->get_creation_timestamp() < var_timestamp) {
+              promise->set_non_lexical_scope_observation(direct);
+              direct = false;
+              return; // to remove
+            } else {
+              return;
+            }
           }
         }
       }
     }
-  }
-
-  void identify_side_effect_observers(const Variable& var, const SEXP env) {
-    const timestamp_t var_timestamp = var.get_modification_timestamp();
-
-    /* this implies we have not seen the variable before.
-     TODO - see when this case is triggered and ensure
-     there is no bug */
-    if (timestamp_is_undefined(var_timestamp)) {
-      return;
+    
+    void notify_caller(Call* callee) {
+      ExecutionContextStack& stack = get_stack_();
+      
+      if (!stack.is_empty()) {
+        ExecutionContext exec_ctxt = stack.peek(1);
+        
+        if (!exec_ctxt.is_call()) {
+          return;
+        }
+        
+        Call* caller = exec_ctxt.get_call();
+        Function* function = caller->get_function();
+        if (function->is_closure() || function->is_curly_bracket()) {
+          caller->analyze_callee(callee);
+        }
+      }
     }
-
-    /* if the modification timestamp of the variable is
-     greater than the creation timestamp of the promise,
-     then, that promise has identified a side effect */
-
-    bool direct = true;
-
-    ExecutionContextStack& stack = get_stack_();
-
-    for (auto iter = stack.rbegin(); iter != stack.rend(); ++iter) {
-      ExecutionContext& exec_ctxt = *iter;
-
-      /* If the most recent context that is responsible for this
-       side effect is a closure, then return. Currently, we only
-       care about promises directly responsible for side effects.
-       We don't return in case of specials and builtins because
-       they are more like operators in a programming language and
-       everything ultimately happens in them and returning on
-       encountering them will make it look like no promise has
-       caused a side effect. */
-
-      if (exec_ctxt.is_closure()) {
-        if (exec_ctxt.get_closure()->get_environment() == env) {
-          /* its normal for a function to mutate variables in its
-           own environment. this case is not interesting. */
+    
+    eval_depth_t get_evaluation_depth(Call* call) {
+      ExecutionContextStack& stack = get_stack_();
+      ExecutionContextStack::reverse_iterator iter;
+      eval_depth_t eval_depth = {0, 0, 0, -1};
+      bool nesting = true;
+      
+      for (iter = stack.rbegin(); iter != stack.rend(); ++iter) {
+        ExecutionContext& exec_ctxt = *iter;
+        
+        if (exec_ctxt.is_closure()) {
+          nesting = false;
+          if (exec_ctxt.get_call() == call)
+            break;
+          ++eval_depth.call_depth;
+        } else if (exec_ctxt.is_promise()) {
+          ++eval_depth.promise_depth;
+          if (nesting)
+            ++eval_depth.nested_promise_depth;
+          DenotedValue* promise = exec_ctxt.get_promise();
+          if (eval_depth.forcing_actual_argument_position == -1 &&
+              promise->is_argument() &&
+              promise->get_last_argument()->get_call() == call) {
+            eval_depth.forcing_actual_argument_position =
+              promise->get_last_argument()
+            ->get_actual_argument_position();
+          }
+        }
+      }
+      
+      // if this happens, it means we could not locate the call from which
+      // this promise originated. This means that this is an escaped
+      // promise.
+      if (iter == stack.rend()) {
+        return ESCAPED_PROMISE_EVAL_DEPTH;
+      }
+      
+      return eval_depth;
+    }
+    
+    void summarize_promise_lifecycle_(const lifecycle_t& lifecycle) {
+      for (std::size_t i = 0; i < lifecycle_summary_.size(); ++i) {
+        if (lifecycle_summary_[i].first.action == lifecycle.action &&
+            lifecycle_summary_[i].first.count == lifecycle.count) {
+          ++lifecycle_summary_[i].second;
           return;
         }
       }
-
-      if (exec_ctxt.is_promise()) {
-        DenotedValue* promise = exec_ctxt.get_promise();
-
-        const SEXP prom_env = promise->get_environment();
-
-        if (prom_env == env) {
-          if (promise->get_creation_timestamp() < var_timestamp) {
-            promise->set_self_scope_observation(direct);
-            direct = false;
-            return; // to remove
-          } else {
-            /* return if the promise observes a variable in its
-             * environment created before it. */
-            return;
-          }
-        } else if (is_parent_environment(env, prom_env)) {
-          /* if this happens, promise is observing side effect
-           in its lexically scoped environment. */
-          if (promise->get_creation_timestamp() < var_timestamp) {
-            promise->set_lexical_scope_observation(direct);
-            direct = false;
-            return; // to remove
-          } else {
-            return;
-          }
-        } else {
-          /* if this happens, promise is observing side effect
-           in non lexically scoped environment */
-          if (promise->get_creation_timestamp() < var_timestamp) {
-            promise->set_non_lexical_scope_observation(direct);
-            direct = false;
-            return; // to remove
-          } else {
-            return;
-          }
-        }
+      lifecycle_summary_.push_back({lifecycle, 1});
+    }
+    
+    void serialize_promise_lifecycle_summary_() {
+      for (const auto& summary: lifecycle_summary_) {
+        promise_lifecycles_data_table_->write_row(
+            summary.first.action,
+            pos_seq_to_string(summary.first.count),
+            summary.second);
       }
     }
-  }
-
-  void notify_caller(Call* callee) {
-    ExecutionContextStack& stack = get_stack_();
-
-    if (!stack.is_empty()) {
-      ExecutionContext exec_ctxt = stack.peek(1);
-
-      if (!exec_ctxt.is_call()) {
-        return;
-      }
-
-      Call* caller = exec_ctxt.get_call();
-      Function* function = caller->get_function();
-      if (function->is_closure() || function->is_curly_bracket()) {
-        caller->analyze_callee(callee);
-      }
-    }
-  }
-
-  eval_depth_t get_evaluation_depth(Call* call) {
-    ExecutionContextStack& stack = get_stack_();
-    ExecutionContextStack::reverse_iterator iter;
-    eval_depth_t eval_depth = {0, 0, 0, -1};
-    bool nesting = true;
-
-    for (iter = stack.rbegin(); iter != stack.rend(); ++iter) {
-      ExecutionContext& exec_ctxt = *iter;
-
-      if (exec_ctxt.is_closure()) {
-        nesting = false;
-        if (exec_ctxt.get_call() == call)
-          break;
-        ++eval_depth.call_depth;
-      } else if (exec_ctxt.is_promise()) {
-        ++eval_depth.promise_depth;
-        if (nesting)
-          ++eval_depth.nested_promise_depth;
-        DenotedValue* promise = exec_ctxt.get_promise();
-        if (eval_depth.forcing_actual_argument_position == -1 &&
-            promise->is_argument() &&
-            promise->get_last_argument()->get_call() == call) {
-          eval_depth.forcing_actual_argument_position =
-            promise->get_last_argument()
-          ->get_actual_argument_position();
-        }
-      }
-    }
-
-    // if this happens, it means we could not locate the call from which
-    // this promise originated. This means that this is an escaped
-    // promise.
-    if (iter == stack.rend()) {
-      return ESCAPED_PROMISE_EVAL_DEPTH;
-    }
-
-    return eval_depth;
-  }
-
-  void summarize_promise_lifecycle_(const lifecycle_t& lifecycle) {
-    for (std::size_t i = 0; i < lifecycle_summary_.size(); ++i) {
-      if (lifecycle_summary_[i].first.action == lifecycle.action &&
-          lifecycle_summary_[i].first.count == lifecycle.count) {
-        ++lifecycle_summary_[i].second;
-        return;
-      }
-    }
-    lifecycle_summary_.push_back({lifecycle, 1});
-  }
-
-  void serialize_promise_lifecycle_summary_() {
-    for (const auto& summary: lifecycle_summary_) {
-      promise_lifecycles_data_table_->write_row(
-          summary.first.action,
-          pos_seq_to_string(summary.first.count),
-          summary.second);
-    }
-  }
-
-private:
-  call_id_t call_id_counter_;
-  std::vector<unsigned int> object_count_;
-  std::vector<std::pair<lifecycle_t, int>> lifecycle_summary_;
-  std::vector<unsigned long int> event_counter_;
-};
-
+    
+    private:
+      call_id_t call_id_counter_;
+      std::vector<unsigned int> object_count_;
+      std::vector<std::pair<lifecycle_t, int>> lifecycle_summary_;
+      std::vector<unsigned long int> event_counter_;
+      };
+      
 #endif /* TURBOTRACER_TRACER_STATE_H */
+      

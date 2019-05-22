@@ -13,7 +13,7 @@ class CallSummary {
         S3_method_ = call->is_S3_method();
         S4_method_ = call->is_S4_method();
         call_count_ = 1;
-        call_arg_count_ = call->get_call_as_arg();
+        total_dyn_call_count_ = call->get_dyn_call_count();
     }
 
     const pos_seq_t& get_force_order() const {
@@ -44,15 +44,15 @@ class CallSummary {
         return call_count_;
     }
 
-    int get_call_arg_count() const {
-        return call_arg_count_;
+    int get_total_dyn_call_count() const {
+        return total_dyn_call_count_;
 
     }
 
     bool try_to_merge(const Call* const call) {
         if (is_mergeable_(call)) {
             call_count_++;
-            call_arg_count_ = call_arg_count_ + call->get_call_as_arg();
+            total_dyn_call_count_ = total_dyn_call_count_ + call->get_dyn_call_count();
             return true;
         }
         return false;
@@ -66,7 +66,7 @@ class CallSummary {
     bool S3_method_;
     bool S4_method_;
     int call_count_;
-    int call_arg_count_;
+    int total_dyn_call_count_;
 
     bool is_mergeable_(const Call* const call) const {
         return (get_force_order() == call->get_force_order() &&
