@@ -54,7 +54,7 @@ void eval_entry(dyntracer_t* dyntracer, const SEXP expr, const SEXP rho) {
   state.exit_probe(Event::EvalEntry);
 }
 
-void closure_entry(dyntracer_t* dyntracer,
+void  closure_entry(dyntracer_t* dyntracer,
                    const SEXP call,
                    const SEXP op,
                    const SEXP args,

@@ -995,19 +995,13 @@ public:
   void update_dyn_call_counter(std::string expression_type, SEXP param, Call* fn_call) {
     if (expression_type.compare("Function Call") == 0) {
       std::string sym_name = CHAR(PRINTNAME(CAR(param)));
-      if (sym_name.compare("function") == 0) { 
+      if (sym_name.compare("function") == 0) {
         fn_call->set_dyn_call_count(1);
       }
-      else {fn_call->set_dyn_call_count(0);}
     }
-    
     else if (expression_type.compare("Symbol") == 0) {
       // TODO- needs a hook
       // this symbol could potentially point to a function. We need to inspect the environment to know        
-    }
-    
-    else {
-      fn_call->set_dyn_call_count(0);
     }
   }
   
@@ -1015,8 +1009,8 @@ public:
   void process_dynamic_calls_for_closures(std::string fn_name, Call* fn_call, int arg_index) {
     Argument * arg =  fn_call->get_argument(arg_index);  
     DenotedValue* value = arg->get_denoted_value();
-    std::string expression_type = sexptype_to_string(value->get_expression_type());
     SEXP expr = value->get_expression();
+    std::string expression_type = value_type_to_string(expr);
     
     update_dyn_call_counter(expression_type, expr, fn_call);
   }
@@ -1031,6 +1025,7 @@ public:
     SEXP fn_args = fn_call->get_args();
     SEXP right_param = CADR(fn_args); // first element of the object pointed by the right parameter of <<-
     std::string expression_type = value_type_to_string(right_param);
+    
     update_dyn_call_counter(expression_type, right_param, fn_call);
   }
 
