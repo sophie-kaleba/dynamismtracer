@@ -73,6 +73,21 @@ public:
        binary_,
        compression_level_);
     
+    dyn_behavior_data_table_ =
+      create_data_table(output_dirpath_ + "/" + "dyn_behavior",
+      {"function_id",
+       "package",
+       "function_name",
+       "function_type",
+       "formal_parameter_count",
+       "S3_method",
+       "S4_method",
+       "return_value_type",
+       "call_count",
+       "dyn_call_count"},
+       truncate_,
+       binary_,
+       compression_level_);
     
     function_definitions_data_table_ =
       create_data_table(output_dirpath_ + "/" + "function_definitions",
@@ -249,6 +264,7 @@ public:
     delete event_counts_data_table_;
     delete object_counts_data_table_;
     delete call_summaries_data_table_;
+    delete dyn_behavior_data_table_;
     delete function_definitions_data_table_;
     delete arguments_data_table_;
     delete side_effects_data_table_;
@@ -992,14 +1008,16 @@ public:
   }
   
 
-  void update_dyn_call_counter(std::string expression_type, SEXP param, Call* fn_call) {
-    if (expression_type.compare("Function Call") == 0) {
+  void update_dyn_call_counter(sexptype_t expression_type, SEXP param, Call* fn_call) {
+    if (sexptype_to_string(expression_type).compare("Function Call") == 0) {
+   // if (expression_type == LANGSXP) {
       std::string sym_name = CHAR(PRINTNAME(CAR(param)));
+      std::cout << "My sym_name is " << sym_name << "and am coming from " <<  fn_call->get_function_name() << "\n";
       if (sym_name.compare("function") == 0) {
-        fn_call->set_dyn_call_count(1);
+        fn_call->set_dyn_call();
       }
     }
-    else if (expression_type.compare("Symbol") == 0) {
+    else if (expression_type == SYMSXP) {
       // TODO- needs a hook
       // this symbol could potentially point to a function. We need to inspect the environment to know        
     }
@@ -1010,7 +1028,9 @@ public:
     Argument * arg =  fn_call->get_argument(arg_index);  
     DenotedValue* value = arg->get_denoted_value();
     SEXP expr = value->get_expression();
-    std::string expression_type = value_type_to_string(expr);
+    //std::string expression_type = value_type_to_string(expr);
+    sexptype_t expression_type = type_of_sexp(expr);
+    //std::cout << "my number is " << expression_type << "and my name is " << value_type_to_string(expr) << "\n" ;
     
     update_dyn_call_counter(expression_type, expr, fn_call);
   }
@@ -1024,7 +1044,8 @@ public:
   void process_dynamic_calls_for_specials(Call* fn_call){
     SEXP fn_args = fn_call->get_args();
     SEXP right_param = CADR(fn_args); // first element of the object pointed by the right parameter of <<-
-    std::string expression_type = value_type_to_string(right_param);
+    //std::string expression_type = value_type_to_string(right_param);
+    sexptype_t expression_type = type_of_sexp(right_param);
     
     update_dyn_call_counter(expression_type, right_param, fn_call);
   }
@@ -1036,6 +1057,7 @@ private:
   }
   
   DataTableStream* call_summaries_data_table_;
+  DataTableStream* dyn_behavior_data_table_;
   DataTableStream* function_definitions_data_table_;
   std::unordered_map<SEXP, Function*> functions_;
   std::unordered_map<function_id_t, Function*> function_cache_;
@@ -1044,8 +1066,27 @@ private:
     const std::string all_names = function->get_name_string();
     serialize_function_call_summary_(function, all_names);
     serialize_function_definition_(function, all_names);
+    serialize_dyn_behavior_(function, all_names);
   }
-  
+ 
+ void serialize_dyn_behavior_(const Function* function,
+                                       const std::string& names) {
+   for (std::size_t i = 0; i < function->get_summary_count(); ++i) {
+     const CallSummary& call_summary = function->get_call_summary(i);
+     
+     dyn_behavior_data_table_->write_row(
+         function->get_id(),
+         function->get_namespace(),
+         names,
+         sexptype_to_string(function->get_type()),
+         function->get_formal_parameter_count(),
+         call_summary.is_S3_method(),
+         call_summary.is_S4_method(),
+         sexptype_to_string(call_summary.get_return_value_type()),
+         call_summary.get_call_count(),
+         call_summary.get_dyn_call_count());
+   }
+ } 
   void serialize_function_call_summary_(const Function* function,
                                         const std::string& names) {
     for (std::size_t i = 0; i < function->get_summary_count(); ++i) {
@@ -1066,7 +1107,7 @@ private:
             sexptype_to_string(call_summary.get_return_value_type()),
             call_summary.is_jumped(),
             call_summary.get_call_count(),
-            call_summary.get_total_dyn_call_count());
+            call_summary.get_dyn_call_count());
     }
   }
   

@@ -74,6 +74,7 @@ void  closure_entry(dyntracer_t* dyntracer,
   
   std::string function_name = function_call->get_function_name();
   if (function_name.compare("assign") == 0) {
+    std::cout << "hello from assign \n" ; 
     state.process_dynamic_calls_for_closures(function_name, function_call, 1 );
   }
   else if (function_name.compare("with") == 0) {
