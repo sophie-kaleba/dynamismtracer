@@ -1009,10 +1009,8 @@ public:
   
 
   void update_dyn_call_counter(sexptype_t expression_type, SEXP param, Call* fn_call) {
-    if (sexptype_to_string(expression_type).compare("Function Call") == 0) {
-   // if (expression_type == LANGSXP) {
+   if (expression_type == LANGSXP) {
       std::string sym_name = CHAR(PRINTNAME(CAR(param)));
-      std::cout << "My sym_name is " << sym_name << "and am coming from " <<  fn_call->get_function_name() << "\n";
       if (sym_name.compare("function") == 0) {
         fn_call->set_dyn_call();
       }
@@ -1028,9 +1026,7 @@ public:
     Argument * arg =  fn_call->get_argument(arg_index);  
     DenotedValue* value = arg->get_denoted_value();
     SEXP expr = value->get_expression();
-    //std::string expression_type = value_type_to_string(expr);
     sexptype_t expression_type = type_of_sexp(expr);
-    //std::cout << "my number is " << expression_type << "and my name is " << value_type_to_string(expr) << "\n" ;
     
     update_dyn_call_counter(expression_type, expr, fn_call);
   }
@@ -1044,7 +1040,6 @@ public:
   void process_dynamic_calls_for_specials(Call* fn_call){
     SEXP fn_args = fn_call->get_args();
     SEXP right_param = CADR(fn_args); // first element of the object pointed by the right parameter of <<-
-    //std::string expression_type = value_type_to_string(right_param);
     sexptype_t expression_type = type_of_sexp(right_param);
     
     update_dyn_call_counter(expression_type, right_param, fn_call);
