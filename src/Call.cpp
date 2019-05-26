@@ -5,7 +5,7 @@
 Call::Call(const call_id_t id,
            const std::string& function_name,
            const SEXP environment,
-           Function* function, 
+           Function* function,
            const SEXP args)
     : id_(id)
     , function_name_(function_name)

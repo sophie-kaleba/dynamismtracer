@@ -15,7 +15,7 @@ class CallSummary {
         call_count_ = 1;
         dyn_call_count_ = 0;
     }
-    
+
     const pos_seq_t& get_force_order() const {
         return force_order_;
     }
@@ -46,13 +46,14 @@ class CallSummary {
 
     int get_dyn_call_count() const {
         return dyn_call_count_;
-
     }
 
     bool try_to_merge(const Call* const call) {
         if (is_mergeable_(call)) {
             call_count_++;
-            if (call->is_dyn_call()) {dyn_call_count_++;} 
+            if (call->is_dyn_call()) {
+                dyn_call_count_++;
+            }
             return true;
         }
         return false;

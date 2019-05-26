@@ -23,9 +23,9 @@ class Call {
     call_id_t get_id() const {
         return id_;
     }
-    
+
     SEXP get_args() {
-      return args_;
+        return args_;
     }
 
     const std::string& get_function_name() const {
@@ -45,11 +45,11 @@ class Call {
     }
 
     void set_dyn_call() {
-      dyn_call_ = true;
+        dyn_call_ = true;
     }
 
     bool is_dyn_call() const {
-      return dyn_call_;
+        return dyn_call_;
     }
 
     SEXP get_environment() const {
