@@ -32,3 +32,4 @@ for file in `git diff-index --cached --name-only --diff-filter=ACMR HEAD`
 do
     clang_format ${file}
 done
+
