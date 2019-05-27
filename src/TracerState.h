@@ -1069,19 +1069,21 @@ class TracerState {
                                  const std::string& names) {
         for (std::size_t i = 0; i < function->get_summary_count(); ++i) {
             const CallSummary& call_summary = function->get_call_summary(i);
-
-            dyn_behavior_data_table_->write_row(
-                function->get_id(),
-                function->get_namespace(),
-                names,
-                sexptype_to_string(function->get_type()),
-                function->get_formal_parameter_count(),
-                call_summary.is_S3_method(),
-                call_summary.is_S4_method(),
-                sexptype_to_string(call_summary.get_return_value_type()),
-                call_summary.get_call_count(),
-                call_summary.get_dyn_call_count());
-        }
+	    
+	    if (call_summary.get_dyn_call_count() > 0) {
+            	dyn_behavior_data_table_->write_row(
+                	function->get_id(),
+                	function->get_namespace(),
+                	names,
+                	sexptype_to_string(function->get_type()),
+                	function->get_formal_parameter_count(),
+                	call_summary.is_S3_method(),
+                	call_summary.is_S4_method(),
+                	sexptype_to_string(call_summary.get_return_value_type()),
+                	call_summary.get_call_count(),
+                	call_summary.get_dyn_call_count());
+        	}
+	}
     }
 
     void serialize_function_call_summary_(const Function* function,
