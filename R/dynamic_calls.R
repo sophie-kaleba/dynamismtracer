@@ -1,0 +1,38 @@
+dynamic_calls_analysis <- create_analysis(
+
+    id = "dynamic_calls",
+
+    reducer = function(analyses) {
+
+        if(nrow(analyses$dyn_behavior) == 0) {
+            return(list())
+        }
+
+        list(dyn_behavior = analyses$dyn_behavior)
+    },
+
+    summarizer = function(analyses) {
+
+        encode_sequence <- function(seq) {
+            str_c("(", str_c(seq, collapse = " "), ")", sep = "")
+        }
+
+        decode_sequence <- function(seq) {
+            unlist(str_split(str_sub(seq, 2, -2), " "))
+        }
+
+        dynamic_calls <-
+            analyses$dyn_behavior %>%
+            group_by(function_id) %>%
+            summarize(formal_parameter_count = first(formal_parameter_count),
+		      dyn_call_count = sum(dyn_call_count),
+		      call_count = sum(call_count),
+                      package = first(package),
+                      function_name = encode_sequence(unique(decode_sequence(function_name))),
+                      script = encode_sequence(str_c(package, script_type, script_name,
+                                                     sep = "/"))) %>%
+            ungroup()
+
+        list(dynamic_calls = dynamic_calls)
+    }
+)
