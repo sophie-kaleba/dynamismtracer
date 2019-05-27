@@ -72,6 +72,15 @@ void closure_entry(dyntracer_t* dyntracer,
   //     while(loopy);
   // }
 
+  std::string function_name = function_call->get_function_name();
+  if (function_name.compare("assign") == 0) {
+      state.process_dynamic_calls_for_closures(
+          function_name, function_call, 1);
+  } else if (function_name.compare("with") == 0) {
+      state.process_dynamic_calls_for_closures(
+          function_name, function_call, 1);
+  }
+
   set_dispatch(function_call, dispatch);
 
   state.push_stack(function_call);
@@ -165,6 +174,11 @@ void special_entry(dyntracer_t* dyntracer,
   state.enter_probe(Event::SpecialEntry);
 
   Call* function_call = state.create_call(call, op, args, rho);
+
+  std::string function_name = function_call->get_function_name();
+  if (function_name.compare("<<-") == 0) {
+      state.process_dynamic_calls_for_specials(function_call);
+  }
 
   set_dispatch(function_call, dispatch);
 
