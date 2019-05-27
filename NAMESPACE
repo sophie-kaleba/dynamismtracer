@@ -1,2 +1,3 @@
 useDynLib(dynamismtracer, .registration = TRUE, .fixes = "C_")
 exportPattern("^[[:alpha:]]+")
+import(dynalyzer)

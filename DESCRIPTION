@@ -9,3 +9,7 @@ Description: Profile sources of dynamism in R.
 License: GPL-2
 Encoding: UTF-8
 RoxygenNote: 6.1.0.9000
+Imports:
+  dynalyzer
+LinkingTo:
+  dynalyzer

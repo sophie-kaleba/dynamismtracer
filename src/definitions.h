@@ -1,5 +1,5 @@
-#ifndef PROMISEDYNTRACER_DEFINITIONS_H
-#define PROMISEDYNTRACER_DEFINITIONS_H
+#ifndef DYNAMISMTRACER_DEFINITIONS_H
+#define DYNAMISMTRACER_DEFINITIONS_H
 
 #include <string>
 #include <vector>
@@ -29,4 +29,4 @@ struct lifecycle_t {
 
 typedef std::string scope_t;
 
-#endif /* PROMISEDYNTRACER_DEFINITIONS_H */
+#endif /* DYNAMISMTRACER_DEFINITIONS_H */

@@ -1,5 +1,5 @@
-#ifndef TURBOTRACER_PROBES_H
-#define TURBOTRACER_PROBES_H
+#ifndef DYNAMISMTRACER_PROBES_H
+#define DYNAMISMTRACER_PROBES_H
 
 #include "TracerState.h"
 #include "utilities.h"
@@ -73,4 +73,4 @@ void context_jump(dyntracer_t* dyntracer,
 
 void context_exit(dyntracer_t* dyntracer, const RCNTXT*);
 };
-#endif /* TURBOTRACER_PROBES_H */
+#endif /* DYNAMISMTRACER_PROBES_H */

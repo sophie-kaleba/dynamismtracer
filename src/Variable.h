@@ -1,5 +1,5 @@
-#ifndef TURBOTRACER_VARIABLE_H
-#define TURBOTRACER_VARIABLE_H
+#ifndef DYNAMISMTRACER_VARIABLE_H
+#define DYNAMISMTRACER_VARIABLE_H
 
 #include "utilities.h"
 
@@ -76,4 +76,4 @@ class Variable {
     const env_id_t env_id_;
 };
 
-#endif /* TURBOTRACER_VARIABLE_H */
+#endif /* DYNAMISMTRACER_VARIABLE_H */

@@ -11,8 +11,6 @@ extern "C" {
 static const R_CallMethodDef CallEntries[] = {
     {"create_dyntracer", (DL_FUNC) &create_dyntracer, 5},
     {"destroy_dyntracer", (DL_FUNC) &destroy_dyntracer, 1},
-    {"write_data_table", (DL_FUNC) &write_data_table, 5},
-    {"read_data_table", (DL_FUNC) &read_data_table, 3},
     {NULL, NULL, 0}};
 
 void attribute_visible R_init_dynamismtracer(DllInfo* dll) {

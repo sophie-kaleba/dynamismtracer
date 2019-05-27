@@ -1,5 +1,5 @@
-#ifndef TURBOTRACER_TRACER_H
-#define TURBOTRACER_TRACER_H
+#ifndef DYNAMISMTRACER_TRACER_H
+#define DYNAMISMTRACER_TRACER_H
 
 #include <Rinternals.h>
 
@@ -19,4 +19,4 @@ SEXP destroy_dyntracer(SEXP dyntracer_sexp);
 }
 #endif
 
-#endif /* TURBOTRACER_TRACER_H */
+#endif /* DYNAMISMTRACER_TRACER_H */

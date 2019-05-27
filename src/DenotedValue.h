@@ -1,5 +1,5 @@
-#ifndef TURBOTRACER_DENOTED_VALUE_H
-#define TURBOTRACER_DENOTED_VALUE_H
+#ifndef DYNAMISMTRACER_DENOTED_VALUE_H
+#define DYNAMISMTRACER_DENOTED_VALUE_H
 
 #include "sexptypes.h"
 #include "utilities.h"
@@ -814,4 +814,4 @@ class DenotedValue {
     lifecycle_t lifecycle_;
 };
 
-#endif /* TURBOTRACER_DENOTED_VALUE_H */
+#endif /* DYNAMISMTRACER_DENOTED_VALUE_H */

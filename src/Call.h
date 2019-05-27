@@ -1,10 +1,9 @@
-#ifndef TURBOTRACER_CALL_H
-#define TURBOTRACER_CALL_H
+#ifndef DYNAMISMTRACER_CALL_H
+#define DYNAMISMTRACER_CALL_H
 
 #include "Argument.h"
 #include "Rdyntrace.h"
 #include "Rinternals.h"
-#include "table.h"
 #include "utilities.h"
 
 class Function;
@@ -22,6 +21,59 @@ class Call {
 
     call_id_t get_id() const {
         return id_;
+    }
+
+    void process_calls_affecting_lookup() {
+        // std::string fn_id = compute_hash((get_function() -> get_namespace() +
+        // get_function() -> get_definition()).c_str()); Function* fn =
+        // get_function(); fn->is_byte_compiled();
+        // <<- is a special, we have to access its arguments in a specific way
+        if (function_name_.compare("<<-") == 0) {
+            if (value_type_to_string(CAR(CDR(args_)))
+                    .compare("Function Call") == 0) {
+                set_call_as_arg(1);
+            } else {
+                set_call_as_arg(0);
+            }
+
+        }
+        // assign and with are closures
+        else if ((function_name_.compare("assign") == 0)) {
+            Argument* arg = get_argument(1);
+            DenotedValue* value = arg->get_denoted_value();
+            std::string expression_type =
+                sexptype_to_string(value->get_expression_type());
+
+            if (expression_type.compare("Function Call") == 0) {
+                set_call_as_arg(1);
+            } else {
+                set_call_as_arg(0);
+            }
+        } else if ((function_name_.compare("with") == 0)) {
+            Argument* arg = get_argument(1);
+            DenotedValue* value = arg->get_denoted_value();
+            std::string expression_type =
+                sexptype_to_string(value->get_expression_type());
+
+            if (expression_type.compare("Function Call") == 0) {
+                set_call_as_arg(1);
+            } else {
+                set_call_as_arg(0);
+            }
+        } else if ((function_name_.compare("mamahu") == 0)) {
+            Argument* arg = get_argument(1);
+            DenotedValue* value = arg->get_denoted_value();
+            std::string expression_type =
+                sexptype_to_string(value->get_expression_type());
+
+            if (expression_type.compare("Function Call") == 0) {
+                set_call_as_arg(1);
+            } else {
+                set_call_as_arg(0);
+            }
+        } else {
+            set_call_as_arg(0);
+        }
     }
 
     SEXP get_args() {
@@ -44,12 +96,12 @@ class Call {
         return actual_argument_count_;
     }
 
-    void set_dyn_call() {
-        dyn_call_ = true;
+    void set_call_as_arg(int nr) {
+        call_as_arg_ = nr;
     }
 
-    bool is_dyn_call() const {
-        return dyn_call_;
+    int get_call_as_arg() const {
+        return call_as_arg_;
     }
 
     SEXP get_environment() const {
@@ -163,10 +215,10 @@ class Call {
     bool S3_method_;
     bool S4_method_;
     int callee_counter_;
-    bool dyn_call_;
+    int call_as_arg_;
     bool wrapper_;
     std::vector<Argument*> arguments_;
     pos_seq_t force_order_;
 };
 
-#endif /* TURBOTRACER_CALL_H */
+#endif /* DYNAMISMTRACER_CALL_H */

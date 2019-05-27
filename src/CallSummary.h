@@ -1,5 +1,5 @@
-#ifndef TURBOTRACER_CALL_SUMMARY_H
-#define TURBOTRACER_CALL_SUMMARY_H
+#ifndef DYNAMISMTRACER_CALL_SUMMARY_H
+#define DYNAMISMTRACER_CALL_SUMMARY_H
 
 #include "Call.h"
 
@@ -13,7 +13,7 @@ class CallSummary {
         S3_method_ = call->is_S3_method();
         S4_method_ = call->is_S4_method();
         call_count_ = 1;
-        dyn_call_count_ = 0;
+        call_arg_count_ = call->get_call_as_arg();
     }
 
     const pos_seq_t& get_force_order() const {
@@ -44,16 +44,14 @@ class CallSummary {
         return call_count_;
     }
 
-    int get_dyn_call_count() const {
-        return dyn_call_count_;
+    int get_call_arg_count() const {
+        return call_arg_count_;
     }
 
     bool try_to_merge(const Call* const call) {
         if (is_mergeable_(call)) {
             call_count_++;
-            if (call->is_dyn_call()) {
-                dyn_call_count_++;
-            }
+            call_arg_count_ = call_arg_count_ + call->get_call_as_arg();
             return true;
         }
         return false;
@@ -67,17 +65,17 @@ class CallSummary {
     bool S3_method_;
     bool S4_method_;
     int call_count_;
-    int dyn_call_count_;
+    int call_arg_count_;
 
     bool is_mergeable_(const Call* const call) const {
         return (get_force_order() == call->get_force_order() &&
-                    get_missing_argument_positions() ==
-                        call->get_missing_argument_positions() &&
-                    is_jumped() == call->is_jumped() &&
-                    get_return_value_type() == call->get_return_value_type(),
-                is_S3_method() == call->is_S3_method(),
+                get_missing_argument_positions() ==
+                    call->get_missing_argument_positions() &&
+                is_jumped() == call->is_jumped() &&
+                get_return_value_type() == call->get_return_value_type() &&
+                is_S3_method() == call->is_S3_method() &&
                 is_S4_method() == call->is_S4_method());
     }
 };
 
-#endif /* TURBOTRACER_CALL_SUMMARY_H */
+#endif /* DYNAMISMTRACER_CALL_SUMMARY_H */
