@@ -68,11 +68,26 @@ class TracerState {
              "missing_arguments",
              "return_value_type",
              "jumped",
-             "call_count",
-             "call_arg_count"},
+             "call_count"},
             truncate_,
             binary_,
             compression_level_);
+
+        dyn_behavior_data_table_ = dynalyzer_create_data_table(
+						output_dirpath_ + "/" + "dyn_behavior",
+	          {"function_id",
+	           "package",
+	           "function_name",
+	           "function_type",
+	           "formal_parameter_count",
+	           "S3_method",
+	           "S4_method",
+	           "return_value_type",
+	           "call_count",
+	           "dyn_call_count"},
+	          truncate_,
+	          binary_,
+	          compression_level_);
 
         function_definitions_data_table_ = dynalyzer_create_data_table(
             output_dirpath_ + "/" + "function_definitions",
@@ -249,6 +264,7 @@ class TracerState {
         delete event_counts_data_table_;
         delete object_counts_data_table_;
         delete call_summaries_data_table_;
+        delete dyn_behavior_data_table_;
         delete function_definitions_data_table_;
         delete arguments_data_table_;
         delete side_effects_data_table_;
@@ -771,7 +787,6 @@ class TracerState {
             int eval = dyntrace_get_c_function_argument_evaluation(op);
             function_call->set_force_order(eval);
         }
-        function_call->process_calls_affecting_lookup();
         return function_call;
     }
 
@@ -991,6 +1006,46 @@ class TracerState {
         }
     }
 
+    void update_dyn_call_counter(sexptype_t expression_type,
+                                 SEXP param,
+                                 Call* fn_call) {
+        if (expression_type == LANGSXP) {
+            std::string sym_name = CHAR(PRINTNAME(CAR(param)));
+            if (sym_name.compare("function") == 0) {
+                fn_call->set_dyn_call();
+            }
+        } else if (expression_type == SYMSXP) {
+            // TODO- needs a hook
+            // this symbol could potentially point to a function. We need to
+            // inspect the environment to know
+        }
+    }
+
+    void process_dynamic_calls_for_closures(std::string fn_name,
+                                            Call* fn_call,
+                                            int arg_index) {
+        Argument* arg = fn_call->get_argument(arg_index);
+        DenotedValue* value = arg->get_denoted_value();
+        SEXP expr = value->get_expression();
+        sexptype_t expression_type = type_of_sexp(expr);
+
+        update_dyn_call_counter(expression_type, expr, fn_call);
+    }
+
+    /* f <<- 1+2
+     * op is <<-
+     * CAR(args) is the symbol f
+     * CDR(args) is a pairlist, whose 1st value is a function call - OLD
+     */
+    void process_dynamic_calls_for_specials(Call* fn_call) {
+        SEXP fn_args = fn_call->get_args();
+        SEXP right_param = CADR(fn_args); // first element of the object pointed
+                                          // by the right parameter of <<-
+        sexptype_t expression_type = type_of_sexp(right_param);
+
+        update_dyn_call_counter(expression_type, right_param, fn_call);
+    }
+
   private:
     void destroy_function_(Function* function) {
         serialize_function_(function);
@@ -998,6 +1053,7 @@ class TracerState {
     }
 
     DataTableStream* call_summaries_data_table_;
+    DataTableStream* dyn_behavior_data_table_;
     DataTableStream* function_definitions_data_table_;
     std::unordered_map<SEXP, Function*> functions_;
     std::unordered_map<function_id_t, Function*> function_cache_;
@@ -1006,6 +1062,28 @@ class TracerState {
         const std::string all_names = function->get_name_string();
         serialize_function_call_summary_(function, all_names);
         serialize_function_definition_(function, all_names);
+        serialize_dyn_behavior_(function, all_names);
+    }
+
+    void serialize_dyn_behavior_(const Function* function,
+                                 const std::string& names) {
+        for (std::size_t i = 0; i < function->get_summary_count(); ++i) {
+            const CallSummary& call_summary = function->get_call_summary(i);
+	    
+	    if (call_summary.get_dyn_call_count() > 0) {
+            	dyn_behavior_data_table_->write_row(
+                	function->get_id(),
+                	function->get_namespace(),
+                	names,
+                	sexptype_to_string(function->get_type()),
+                	function->get_formal_parameter_count(),
+                	call_summary.is_S3_method(),
+                	call_summary.is_S4_method(),
+                	sexptype_to_string(call_summary.get_return_value_type()),
+                	call_summary.get_call_count(),
+                	call_summary.get_dyn_call_count());
+        	}
+	}
     }
 
     void serialize_function_call_summary_(const Function* function,
@@ -1027,8 +1105,7 @@ class TracerState {
                     call_summary.get_missing_argument_positions()),
                 sexptype_to_string(call_summary.get_return_value_type()),
                 call_summary.is_jumped(),
-                call_summary.get_call_count(),
-                call_summary.get_call_arg_count());
+                call_summary.get_call_count());
         }
     }
 
@@ -1263,3 +1340,4 @@ class TracerState {
 };
 
 #endif /* DYNAMISMTRACER_TRACER_STATE_H */
+
