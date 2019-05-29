@@ -47,6 +47,10 @@ class CallSummary {
     int get_dyn_call_count() const {
         return dyn_call_count_;
     }
+    
+    const std::string& get_total_arg_list() const {
+      return arg_list_;
+    }
 
     bool try_to_merge(const Call* const call) {
         if (is_mergeable_(call)) {
@@ -68,6 +72,7 @@ class CallSummary {
     bool S4_method_;
     int call_count_;
     int dyn_call_count_;
+    std::string arg_list_;
 
     bool is_mergeable_(const Call* const call) const {
         return (get_force_order() == call->get_force_order() &&

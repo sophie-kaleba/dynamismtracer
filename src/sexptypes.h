@@ -14,5 +14,7 @@ extern const sexptype_t CONTEXTSXP;
 sexptype_t type_of_sexp(SEXP value);
 std::string sexptype_to_string(sexptype_t);
 std::string value_type_to_string(SEXP value);
+void inspect_sexp(SEXP op, SEXP args);
+void inspect_sexp_args(SEXP args);
 
 #endif /* DYNAMISMTRACER_SEXPTYPES_H */

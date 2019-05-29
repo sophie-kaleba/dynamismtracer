@@ -88,6 +88,22 @@ class TracerState {
 	          truncate_,
 	          binary_,
 	          compression_level_);
+        
+        
+        dyn_behavior_calls_detailed_data_table_ = dynalyzer_create_data_table(
+          output_dirpath_ + "/" + "dyn_behavior_detailed",
+          {"function_id",
+           "package",
+           "function_name",
+           "function_type",
+           "formal_parameter_count",
+           "S3_method",
+           "S4_method",
+           "return_value_type"},
+          // "agr_list"},
+           truncate_,
+           binary_,
+           compression_level_);
 
         function_definitions_data_table_ = dynalyzer_create_data_table(
             output_dirpath_ + "/" + "function_definitions",
@@ -265,6 +281,7 @@ class TracerState {
         delete object_counts_data_table_;
         delete call_summaries_data_table_;
         delete dyn_behavior_data_table_;
+        delete dyn_behavior_calls_detailed_data_table_;
         delete function_definitions_data_table_;
         delete arguments_data_table_;
         delete side_effects_data_table_;
@@ -1045,6 +1062,22 @@ class TracerState {
 
         update_dyn_call_counter(expression_type, right_param, fn_call);
     }
+    
+    
+    const std::string get_arg_list(Call* fn_call) const {
+      std::string args = "";
+      SEXP all_args = fn_call->get_args();
+      
+      SEXP current_arg = CAR(all_args);
+      //inspect_sexp_args(current_arg);
+      while (current_arg != R_NilValue) {
+        std::string current_value = value_type_to_string(current_arg); 
+        args = args+current_value;
+        current_arg = CADR(current_arg);
+      }
+      std::cout << args << "\n";
+      return args;
+    }
 
   private:
     void destroy_function_(Function* function) {
@@ -1055,6 +1088,7 @@ class TracerState {
     DataTableStream* call_summaries_data_table_;
     DataTableStream* dyn_behavior_data_table_;
     DataTableStream* function_definitions_data_table_;
+    DataTableStream* dyn_behavior_calls_detailed_data_table_;
     std::unordered_map<SEXP, Function*> functions_;
     std::unordered_map<function_id_t, Function*> function_cache_;
 
@@ -1084,6 +1118,26 @@ class TracerState {
                 	call_summary.get_dyn_call_count());
         	}
 	}
+    }
+    
+    void serialize_dyn_behavior_calls_detailed_(const Function* function,
+                                 const std::string& names) {
+      for (std::size_t i = 0; i < function->get_summary_count(); ++i) {
+        const CallSummary& call_summary = function->get_call_summary(i);
+        
+        if (call_summary.get_dyn_call_count() > 0) {
+          dyn_behavior_data_table_->write_row(
+              function->get_id(),
+              function->get_namespace(),
+              names,
+              sexptype_to_string(function->get_type()),
+              function->get_formal_parameter_count(),
+              call_summary.is_S3_method(),
+              call_summary.is_S4_method(),
+              sexptype_to_string(call_summary.get_return_value_type()));
+              //call_summary.get_total_arg_list());
+        }
+      }
     }
 
     void serialize_function_call_summary_(const Function* function,

@@ -54,3 +54,29 @@ sexptype_t type_of_sexp(SEXP value) {
 std::string value_type_to_string(SEXP value) {
     return sexptype_to_string(type_of_sexp(value));
 }
+
+void inspect_sexp(SEXP op, SEXP args) {
+    std::cout << "OP is " << value_type_to_string(op) << "\n"  ;
+    std::cout << "ARGS are " << value_type_to_string(args) << "\n"  ;
+    if (value_type_to_string(args).compare("Pairlist") == 0) {
+        std::cout << "Parlist[1] is " << value_type_to_string(CAR(args)) << " whose value is " << CHAR(PRINTNAME(CAR(args))) << "\n"  ;
+        std::cout << "Pairlist[2] is " << value_type_to_string(CDR(args)) << " whose CAR is " << value_type_to_string(CADR(args)) << "\n"  ;
+        
+        if (value_type_to_string(CADR(args)).compare("Function Call") == 0) {
+            std::cout << "LANGSXP[1] is " << value_type_to_string(CAR(CADR(args))) << " whose value is " << CHAR(PRINTNAME(CAR(CADR(args)))) << "\n\n"; 
+        }
+    }
+}
+
+void inspect_sexp_args(SEXP args) {
+    std::cout << "ARGS are " << value_type_to_string(args) << "\n"  ;
+    if (value_type_to_string(args).compare("Pairlist") == 0) {
+        std::cout << "Parlist[1] is " << value_type_to_string(CAR(args)) << " whose value is " << CHAR(PRINTNAME(CAR(args))) << "\n"  ;
+        std::cout << "Pairlist[2] is " << value_type_to_string(CDR(args)) << " whose CAR is " << value_type_to_string(CADR(args)) << "\n"  ;
+        
+        if (value_type_to_string(CADR(args)).compare("Function Call") == 0) {
+            std::cout << "LANGSXP[1] is " << value_type_to_string(CAR(CADR(args))) << " whose value is " << CHAR(PRINTNAME(CAR(CADR(args)))) << "\n\n"; 
+        }
+    }
+    
+}

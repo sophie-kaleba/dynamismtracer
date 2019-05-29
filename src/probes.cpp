@@ -178,6 +178,7 @@ void special_entry(dyntracer_t* dyntracer,
   std::string function_name = function_call->get_function_name();
   if (function_name.compare("<<-") == 0) {
       state.process_dynamic_calls_for_specials(function_call);
+      state.get_arg_list(function_call);
   }
 
   set_dispatch(function_call, dispatch);
