@@ -13,7 +13,7 @@ class CallSummary {
         S3_method_ = call->is_S3_method();
         S4_method_ = call->is_S4_method();
         call_count_ = 1;
-        dyn_call_count_ = 0;
+        dyn_call_count_ = call->is_dyn_call();
     }
 
     const pos_seq_t& get_force_order() const {
