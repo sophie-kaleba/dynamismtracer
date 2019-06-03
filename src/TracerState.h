@@ -1063,17 +1063,43 @@ class TracerState {
         update_dyn_call_counter(expression_type, right_param, fn_call);
     }
     
+    int length(SEXP s) {
+      int i = 0;
+      
+      for(SEXP cons = x; cons != R_NilValue; cons = CDR(nxt) {
+        SEXP el = CAR(cons);
+        std::cout << value_type_to_string(el) << "\n";
+        i++;
+      }
+      
+      return i;
+    }
     
     const std::string get_arg_list(Call* fn_call) const {
       std::string args = "";
+      std::string current_value = "";
       SEXP all_args = fn_call->get_args();
       
       SEXP current_arg = CAR(all_args);
-      //inspect_sexp_args(current_arg);
+      SEXP next_args = CDR(all_args);
+      
       while (current_arg != R_NilValue) {
-        std::string current_value = value_type_to_string(current_arg); 
-        args = args+current_value;
-        current_arg = CADR(current_arg);
+        //std::string current_type = value_type_to_string(current_arg); 
+        sexptype_t current_type = type_of_sexp(current_arg);
+        
+        if (current_type == SYMSXP) {
+          current_value = CHAR(PRINTNAME(current_arg));
+        }
+        else if (current_type == LANGSXP) {
+          //std::string body = CHAR(PRINTNAME(CDR(param)));
+          length(CDR(current_arg));
+          //std::cout << "type " << value_type_to_string(CAR(CDR(current_arg))) << "\n";
+        }
+        
+        args = args+", ("+sexptype_to_string(current_type)+"-"+current_value+")";
+  
+        current_arg = CAR(next_args);
+        next_args = CDR(next_args);
       }
       std::cout << args << "\n";
       return args;
