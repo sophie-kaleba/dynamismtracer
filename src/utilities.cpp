@@ -86,6 +86,15 @@ std::string serialize_r_expression(SEXP e) {
     return expression;
 }
 
+/*
+ * get the arguments from a function call
+ * returns a string linking the argument and its type
+ */
+std::string serialize_arguments(SEXP call) {
+    
+    
+}
+
 std::string compute_hash(const char* data) {
     const EVP_MD* md = EVP_md5();
     unsigned char md_value[EVP_MAX_MD_SIZE];

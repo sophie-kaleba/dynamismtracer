@@ -22,6 +22,8 @@ const char* get_name(SEXP sexp);
 
 std::string serialize_r_expression(SEXP e);
 
+std::string serialize_arguments(SEXP call);
+
 std::string clock_ticks_to_string(clock_t ticks);
 std::string to_string(const char* str);
 

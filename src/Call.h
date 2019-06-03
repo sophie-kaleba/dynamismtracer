@@ -149,6 +149,10 @@ class Call {
 
         return missing_argument_positions;
     }
+    
+    const std::string get_serialized_arguments(SEXP op) {
+      return serialize_arguments(op);
+    }
 
   private:
     const call_id_t id_;

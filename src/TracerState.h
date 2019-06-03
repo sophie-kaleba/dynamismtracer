@@ -1351,15 +1351,13 @@ class TracerState {
      * stores the call site details (parameters and their type) in a table
      * TODO - adapt the row contents
      */
-    void serialize_dynamic_call_site_(Call* call) {
+    void serialize_dynamic_call_site_(SEXP op, Call* call, const std::string& name) {
       if (call->is_dynamic_call()) {
         Function* function = call->get_function();
         dynamic_call_site_data_table_->write_row(
             function->get_id(),
-            function->get_namespace(),
-            //names,
-            function->get_formal_parameter_count(),
-            function->is_byte_compiled(),
+            name,
+            call->get_serialized_arguments(op),
             function->get_definition());
       }
     }
