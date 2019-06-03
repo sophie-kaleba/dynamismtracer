@@ -4,11 +4,11 @@ dynamic_calls_analysis <- create_analysis(
 
     reducer = function(analyses) {
 
-        if(nrow(analyses$dyn_behavior) == 0) {
+        if(nrow(analyses$dynamic_call_summaries) == 0) {
             return(list())
         }
 
-        list(dyn_behavior = analyses$dyn_behavior)
+        list(dynamic_call_summaries = analyses$dynamic_call_summaries)
     },
 
     summarizer = function(analyses) {
@@ -21,8 +21,8 @@ dynamic_calls_analysis <- create_analysis(
             unlist(str_split(str_sub(seq, 2, -2), " "))
         }
 
-        dynamic_calls <-
-            analyses$dyn_behavior %>%
+        dynamic_call_summaries <-
+            analyses$dynamic_call_summaries %>%
             group_by(function_id) %>%
             summarize(formal_parameter_count = first(formal_parameter_count),
 		      dyn_call_count = sum(dyn_call_count),
@@ -33,6 +33,6 @@ dynamic_calls_analysis <- create_analysis(
                                                      sep = "/"))) %>%
             ungroup()
 
-        list(dynamic_calls = dynamic_calls)
+        list(dynamic_call_summaries = dynamic_call_summaries)
     }
 )

@@ -571,8 +571,6 @@ class DenotedValue {
         , local_(false)
         , active_(false)
         , argument_stack_({})
-        , default_(false)
-        , evaluated_(false)
         , was_argument_(false)
         , creation_scope_(UNASSIGNED_SCOPE)
         , forcing_scope_(UNASSIGNED_SCOPE)
@@ -749,8 +747,6 @@ class DenotedValue {
     bool local_;
     bool active_;
     std::vector<Argument*> argument_stack_;
-    bool default_;
-    bool evaluated_;
     bool was_argument_;
     scope_t creation_scope_;
     scope_t forcing_scope_;

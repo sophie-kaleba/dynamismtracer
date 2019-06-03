@@ -5,7 +5,7 @@
 Call::Call(const call_id_t id,
            const std::string& function_name,
            const SEXP environment,
-           Function* function, 
+           Function* function,
            const SEXP args)
     : id_(id)
     , function_name_(function_name)
@@ -17,8 +17,8 @@ Call::Call(const call_id_t id,
     , jumped_(false)
     , S3_method_(false)
     , S4_method_(false)
-    , dyn_call_(false)
-    , callee_counter_(0) {
+    , callee_counter_(0)
+    , dynamic_call_(false) {
     wrapper_ = function_->is_dot_internal() || function_->is_dot_primitive() ||
                function_->is_dot_c() || function_->is_dot_fortran() ||
                function_->is_dot_external() || function_->is_dot_external2() ||

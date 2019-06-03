@@ -4,11 +4,11 @@
 
 extern "C" {
 
-  SEXP create_dyntracer(SEXP output_dirpath,
-                        SEXP verbose,
-                        SEXP truncate,
-                        SEXP binary,
-                        SEXP compression_level) {
+SEXP create_dyntracer(SEXP output_dirpath,
+                      SEXP verbose,
+                      SEXP truncate,
+                      SEXP binary,
+                      SEXP compression_level) {
     void* state = new TracerState(sexp_to_string(output_dirpath),
                                   sexp_to_bool(verbose),
                                   sexp_to_bool(truncate),
@@ -28,25 +28,26 @@ extern "C" {
     dyntracer->probe_builtin_exit = builtin_exit;
     dyntracer->probe_special_entry = special_entry;
     dyntracer->probe_special_exit = special_exit;
+    dyntracer->probe_assignment_call = assignment_call;
     dyntracer->state = state;
     dyntracer->probe_context_entry = context_entry;
     dyntracer->probe_context_jump = context_jump;
     dyntracer->probe_context_exit = context_exit;
     return dyntracer_to_sexp(dyntracer, "dyntracer.promise");
-  }
+}
 
-  static void destroy_promise_dyntracer(dyntracer_t* dyntracer) {
+static void destroy_promise_dyntracer(dyntracer_t* dyntracer) {
     /* free dyntracer iff it has not already been freed.
      this check ensures that multiple calls to destroy_dyntracer on the same
      object do not crash the process. */
     if (dyntracer) {
-      delete (static_cast<TracerState*>(dyntracer->state));
-      free(dyntracer);
+        delete (static_cast<TracerState*>(dyntracer->state));
+        free(dyntracer);
     }
-  }
+}
 
-  SEXP destroy_dyntracer(SEXP dyntracer_sexp) {
+SEXP destroy_dyntracer(SEXP dyntracer_sexp) {
     return dyntracer_destroy_sexp(dyntracer_sexp, destroy_promise_dyntracer);
-  }
+}
 
 } // extern "C"

@@ -33,9 +33,9 @@ class TracerState {
         , truncate_(truncate)
         , binary_(binary)
         , compression_level_(compression_level)
-        , denoted_value_id_counter_(0)
         , environment_id_(0)
         , variable_id_(0)
+        , denoted_value_id_counter_(0)
         , timestamp_(0)
         , call_id_counter_(0)
         , object_count_(OBJECT_TYPE_TABLE_COUNT, 0)
@@ -73,21 +73,21 @@ class TracerState {
             binary_,
             compression_level_);
 
-        dyn_behavior_data_table_ = dynalyzer_create_data_table(
-						output_dirpath_ + "/" + "dyn_behavior",
-	          {"function_id",
-	           "package",
-	           "function_name",
-	           "function_type",
-	           "formal_parameter_count",
-	           "S3_method",
-	           "S4_method",
-	           "return_value_type",
-	           "call_count",
-	           "dyn_call_count"},
-	          truncate_,
-	          binary_,
-	          compression_level_);
+        dynamic_call_summaries_data_table_ = dynalyzer_create_data_table(
+            output_dirpath_ + "/" + "dynamic_call_summaries",
+            {"function_id",
+             "package",
+             "function_name",
+             "function_type",
+             "formal_parameter_count",
+             "S3_method",
+             "S4_method",
+             "return_value_type",
+             "call_count",
+             "dyn_call_count"},
+            truncate_,
+            binary_,
+            compression_level_);
 
         function_definitions_data_table_ = dynalyzer_create_data_table(
             output_dirpath_ + "/" + "function_definitions",
@@ -264,7 +264,7 @@ class TracerState {
         delete event_counts_data_table_;
         delete object_counts_data_table_;
         delete call_summaries_data_table_;
-        delete dyn_behavior_data_table_;
+        delete dynamic_call_summaries_data_table_;
         delete function_definitions_data_table_;
         delete arguments_data_table_;
         delete side_effects_data_table_;
@@ -519,7 +519,7 @@ class TracerState {
   public:
     DenotedValue* create_promise(const SEXP promise) {
         DenotedValue* promise_state(create_raw_promise_(promise, true));
-        auto result = promises_.insert_or_assign(promise, promise_state);
+        promises_.insert_or_assign(promise, promise_state);
         promise_state->set_creation_timestamp(get_current_timestamp_());
         return promise_state;
     }
@@ -694,7 +694,7 @@ class TracerState {
     }
 
     DenotedValue* create_raw_promise_(const SEXP promise, bool local) {
-        const SEXP rho = dyntrace_get_promise_environment(promise);
+        dyntrace_get_promise_environment(promise);
 
         DenotedValue* promise_state =
             new DenotedValue(get_next_denoted_value_id_(), promise, local);
@@ -1012,7 +1012,7 @@ class TracerState {
         if (expression_type == LANGSXP) {
             std::string sym_name = CHAR(PRINTNAME(CAR(param)));
             if (sym_name.compare("function") == 0) {
-                fn_call->set_dyn_call();
+                fn_call->set_dynamic_call();
             }
         } else if (expression_type == SYMSXP) {
             // TODO- needs a hook
@@ -1053,7 +1053,7 @@ class TracerState {
     }
 
     DataTableStream* call_summaries_data_table_;
-    DataTableStream* dyn_behavior_data_table_;
+    DataTableStream* dynamic_call_summaries_data_table_;
     DataTableStream* function_definitions_data_table_;
     std::unordered_map<SEXP, Function*> functions_;
     std::unordered_map<function_id_t, Function*> function_cache_;
@@ -1062,28 +1062,28 @@ class TracerState {
         const std::string all_names = function->get_name_string();
         serialize_function_call_summary_(function, all_names);
         serialize_function_definition_(function, all_names);
-        serialize_dyn_behavior_(function, all_names);
+        serialize_dynamic_call_summary_(function, all_names);
     }
 
-    void serialize_dyn_behavior_(const Function* function,
-                                 const std::string& names) {
+    void serialize_dynamic_call_summary_(const Function* function,
+                                         const std::string& names) {
         for (std::size_t i = 0; i < function->get_summary_count(); ++i) {
             const CallSummary& call_summary = function->get_call_summary(i);
-	    
-	    if (call_summary.get_dyn_call_count() > 0) {
-            	dyn_behavior_data_table_->write_row(
-                	function->get_id(),
-                	function->get_namespace(),
-                	names,
-                	sexptype_to_string(function->get_type()),
-                	function->get_formal_parameter_count(),
-                	call_summary.is_S3_method(),
-                	call_summary.is_S4_method(),
-                	sexptype_to_string(call_summary.get_return_value_type()),
-                	call_summary.get_call_count(),
-                	call_summary.get_dyn_call_count());
-        	}
-	}
+
+            if (call_summary.get_dynamic_call_count() > 0) {
+                dynamic_call_summaries_data_table_->write_row(
+                    function->get_id(),
+                    function->get_namespace(),
+                    names,
+                    sexptype_to_string(function->get_type()),
+                    function->get_formal_parameter_count(),
+                    call_summary.is_S3_method(),
+                    call_summary.is_S4_method(),
+                    sexptype_to_string(call_summary.get_return_value_type()),
+                    call_summary.get_call_count(),
+                    call_summary.get_dynamic_call_count());
+            }
+        }
     }
 
     void serialize_function_call_summary_(const Function* function,

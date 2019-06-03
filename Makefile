@@ -25,7 +25,7 @@ document:
 	$(R_DYNTRACE) -e "devtools::document()"
 
 check: build
-	$(R_DYNTRACE) CMD check --output=$(R_CMD_CHECK_OUTPUT_DIRPATH) dyanmismtracer_*.tar.gz
+	$(R_DYNTRACE) CMD check --output=$(R_CMD_CHECK_OUTPUT_DIRPATH) dynamismtracer_*.tar.gz
 
 test:
 	$(R_DYNTRACE) -e "devtools::test()"

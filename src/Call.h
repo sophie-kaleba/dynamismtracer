@@ -43,12 +43,12 @@ class Call {
         return actual_argument_count_;
     }
 
-    void set_dyn_call() {
-        dyn_call_ = true;
+    void set_dynamic_call() {
+        dynamic_call_ = true;
     }
 
-    bool is_dyn_call() const {
-        return dyn_call_;
+    bool is_dynamic_call() const {
+        return dynamic_call_;
     }
 
     SEXP get_environment() const {
@@ -162,7 +162,7 @@ class Call {
     bool S3_method_;
     bool S4_method_;
     int callee_counter_;
-    bool dyn_call_;
+    bool dynamic_call_;
     bool wrapper_;
     std::vector<Argument*> arguments_;
     pos_seq_t force_order_;
