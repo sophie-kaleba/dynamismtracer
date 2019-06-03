@@ -151,7 +151,7 @@ class Call {
     }
     
     const std::string get_serialized_arguments(SEXP op) {
-      return serialize_arguments(op);
+      return serialize_arguments(op, this);
     }
 
   private:

@@ -776,7 +776,7 @@ class TracerState {
         resume_execution_timer();
     }
 
-    void enter_probe(const Event event) {
+    void  enter_probe(const Event event) {
         pause_execution_timer();
         increment_timestamp_();
         ++event_counter_[to_underlying(event)];

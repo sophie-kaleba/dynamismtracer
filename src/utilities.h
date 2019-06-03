@@ -8,6 +8,8 @@
 #include <openssl/evp.h>
 #include <type_traits>
 
+class Call;
+
 char* copy_string(char* destination, const char* source, size_t buffer_size);
 
 bool sexp_to_bool(SEXP value);
@@ -22,7 +24,7 @@ const char* get_name(SEXP sexp);
 
 std::string serialize_r_expression(SEXP e);
 
-std::string serialize_arguments(SEXP call);
+std::string serialize_arguments(SEXP op, Call* call);
 
 std::string clock_ticks_to_string(clock_t ticks);
 std::string to_string(const char* str);

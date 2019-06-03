@@ -250,6 +250,28 @@ void assignment_call(dyntracer_t* dyntracer,
                      const SEXP rhs,
                      const SEXP environment,
                      const SEXP rho) {
+    TracerState& state = tracer_state(dyntracer);
+    
+    state.enter_probe(Event::AssignmentCall);
+    
+    Call* function_call = state.create_call(call, op, CDR(call), rho);
+    
+    std::string function_name = function_call->get_function_name();
+    std::cout << "OP is " << value_type_to_string(op) << " and its name is " << function_name << "\n"  ;
+    std::cout << "ARGS are " << value_type_to_string(lhs) << " and " << value_type_to_string(rhs) << "\n\n" ;
+    if (function_name.compare("assign") == 0) {
+        state.update_dyn_call_counter(type_of_sexp(lhs),lhs,function_call);
+    }
+    //if (function_name.compare("<<-") == 0) {
+        //state.process_dynamic_calls_for_specials(function_call);
+        //state.serialize_dynamic_call_site_(op, function_call, function_name);
+    //}
+    
+    //set_dispatch(function_call, dispatch);
+    
+    //state.push_stack(function_call);
+    
+    state.exit_probe(Event::AssignmentCall);
 }
 
 void context_jump(dyntracer_t* dyntracer,

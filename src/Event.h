@@ -33,6 +33,7 @@ enum class Event {
     EnvironmentVariableAssign,
     EnvironmentVariableRemove,
     EnvironmentVariableLookup,
+    AssignmentCall,
     COUNT
 };
 
@@ -96,6 +97,8 @@ inline std::string to_string(const Event event) {
         return "EnvironmentVariableRemove";
     case Event::EnvironmentVariableLookup:
         return "EnvironmentVariableLookup";
+    case Event::AssignmentCall:
+        return "AssignmentCall";
     case Event::COUNT:
         return "UnknownEvent";
     }

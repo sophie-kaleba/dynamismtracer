@@ -90,9 +90,18 @@ std::string serialize_r_expression(SEXP e) {
  * get the arguments from a function call
  * returns a string linking the argument and its type
  */
-std::string serialize_arguments(SEXP call) {
+std::string serialize_arguments(SEXP op, Call* call) {
     
+    std::string args_list = "";
+    //SEXP args = call->get_args();
     
+    if (TYPEOF(op) == SPECIALSXP) {
+
+    }
+    
+    else if(TYPEOF(op) == CLOSXP) {
+        
+    }
 }
 
 std::string compute_hash(const char* data) {
