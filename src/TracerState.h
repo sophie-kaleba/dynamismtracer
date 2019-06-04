@@ -88,6 +88,19 @@ class TracerState {
             truncate_,
             binary_,
             compression_level_);
+        
+        dynamic_call_site_data_table_ = dynalyzer_create_data_table(
+          output_dirpath_ + "/" + "dynamic_call_site",
+          {"function_id",
+          // "package",
+          // "function_name",
+          // "formal_parameter_count",
+          // "byte_compiled",
+           "call_site",
+           "definition"},
+           truncate_,
+           binary_,
+           compression_level_);
 
         function_definitions_data_table_ = dynalyzer_create_data_table(
             output_dirpath_ + "/" + "function_definitions",
@@ -265,6 +278,7 @@ class TracerState {
         delete object_counts_data_table_;
         delete call_summaries_data_table_;
         delete dynamic_call_summaries_data_table_;
+        delete dynamic_call_site_data_table_;
         delete function_definitions_data_table_;
         delete arguments_data_table_;
         delete side_effects_data_table_;
@@ -1054,6 +1068,7 @@ class TracerState {
 
     DataTableStream* call_summaries_data_table_;
     DataTableStream* dynamic_call_summaries_data_table_;
+    DataTableStream* dynamic_call_site_data_table_;
     DataTableStream* function_definitions_data_table_;
     std::unordered_map<SEXP, Function*> functions_;
     std::unordered_map<function_id_t, Function*> function_cache_;
@@ -1330,6 +1345,19 @@ class TracerState {
                 pos_seq_to_string(summary.first.count),
                 summary.second);
         }
+    }
+    
+    /*
+     * is called each time a call proves to be dynamic
+     * stores the call site details (parameters and their type) in a table
+     * TODO - adapt the row contents
+     */
+    void serialize_dynamic_call_site_(Call* call, SEXP lhs, SEXP rhs) {
+        Function* function = call->get_function();
+        dynamic_call_site_data_table_->write_row(
+            function->get_id(),
+            call->get_serialized_arguments(lhs, rhs),
+            function->get_definition());
     }
 
   private:

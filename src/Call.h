@@ -149,6 +149,16 @@ class Call {
 
         return missing_argument_positions;
     }
+    
+    const std::string get_serialized_arguments(SEXP lhs, SEXP rhs) {
+      std::string args_list = get_function_name();
+      args_list += " - ("+value_type_to_string(lhs)+" "+CHAR(PRINTNAME(lhs))+", ";
+      args_list += value_type_to_string(rhs)+" "+get_name(rhs)+")";
+      std::cout << value_type_to_string(CDR(CDR(CDR(rhs)))) << "\n";
+      //std::cout << CHAR(PRINTNAME(lhs)) << " " << value_type_to_string(rhs) << "\n";
+      std::cout << args_list+")" << "\n";
+      return args_list;
+    }
 
   private:
     const call_id_t id_;

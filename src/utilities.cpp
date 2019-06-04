@@ -66,6 +66,9 @@ const char* get_name(SEXP sexp) {
     case SYMSXP:
         s = CHAR(PRINTNAME(sexp));
         break;
+    case CLOSXP:
+        s = get_name(CDR(sexp));
+        break;
     }
 
     return s == NULL ? "" : s;

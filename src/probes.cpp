@@ -262,11 +262,13 @@ void assignment_call(dyntracer_t* dyntracer,
       // increment the assign call instd of the .Internal call
       Call* function_call2 = state.get_stack_().peek(2).get_call();
       function_call2->set_dynamic_call();
+      state.serialize_dynamic_call_site_(function_call2, lhs, rhs);
     }
   }
   else if(assignment_type == DYNTRACE_ASSIGNMENT_ASSIGN) {
     if (TYPEOF(rhs) == CLOSXP) {
-      function_call->set_dynamic_call();  
+      function_call->set_dynamic_call();
+      state.serialize_dynamic_call_site_(function_call, lhs, rhs);
     }
   }
   
