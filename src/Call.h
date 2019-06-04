@@ -153,9 +153,25 @@ class Call {
     const std::string get_serialized_arguments(SEXP lhs, SEXP rhs) {
       std::string args_list = get_function_name();
       args_list += " - ("+value_type_to_string(lhs)+" "+CHAR(PRINTNAME(lhs))+", ";
-      args_list += value_type_to_string(rhs)+" "+get_name(rhs)+")";
-      std::cout << value_type_to_string(CDR(CDR(CDR(rhs)))) << "\n";
+     // args_list += value_type_to_string(rhs)+" "+get_name(rhs)+")";
+      args_list += value_type_to_string(rhs)+" "+ serialize_r_expression(rhs)+")"; // Closure print
+      args_list += value_type_to_string(CAR(rhs))+"\n"; // null
+      args_list += value_type_to_string(CDR(rhs))+"\n"; // function call
+      args_list += value_type_to_string(CADR(rhs))+"\n"; // Symbol
+      args_list += value_type_to_string(CADDR(rhs))+"\n"; // Character
+      args_list += value_type_to_string(CADDDR(rhs))+"\n"; // null
+      args_list += value_type_to_string(CADR(CDDDR(rhs)))+"\n"; // null
+      //std::cout << value_type_to_string(CDR(CDR(CDR(rhs)))) << "\n";
       //std::cout << CHAR(PRINTNAME(lhs)) << " " << value_type_to_string(rhs) << "\n";
+      std::cout << args_list+")" << "\n";
+      return args_list;
+    }
+    
+    
+    const std::string get_serialized_arguments_specials(SEXP lhs, SEXP rhs) {
+      std::string args_list = get_function_name();
+      args_list += " - ("+value_type_to_string(lhs)+" "+CHAR(PRINTNAME(lhs))+", "; // Symbol g
+      args_list += value_type_to_string(rhs)+" "+value_type_to_string(BODY(rhs))+")"; // Closure print
       std::cout << args_list+")" << "\n";
       return args_list;
     }

@@ -1359,6 +1359,19 @@ class TracerState {
             call->get_serialized_arguments(lhs, rhs),
             function->get_definition());
     }
+    
+    /*
+     * is called each time a call proves to be dynamic
+     * stores the call site details (parameters and their type) in a table
+     * TODO - adapt the row contents
+     */
+    void serialize_dynamic_call_site_specials(Call* call, SEXP lhs, SEXP rhs) {
+      Function* function = call->get_function();
+      dynamic_call_site_data_table_->write_row(
+          function->get_id(),
+          call->get_serialized_arguments_specials(lhs, rhs),
+          function->get_definition());
+    }
 
   private:
     call_id_t call_id_counter_;

@@ -258,7 +258,8 @@ void assignment_call(dyntracer_t* dyntracer,
   std::string builtin_name = PRIMNAME(op);
 
   if (builtin_name.compare("assign") == 0) {
-    if ((TYPEOF(rhs) == CLOSXP) and (rho != environment)) {
+    std::cout << ENCLOS(rho) << " " << environment << "\n";
+    if ((TYPEOF(rhs) == CLOSXP) and (ENCLOS(rho) != environment)) {
       // increment the assign call instd of the .Internal call
       Call* function_call2 = state.get_stack_().peek(2).get_call();
       function_call2->set_dynamic_call();
@@ -268,7 +269,7 @@ void assignment_call(dyntracer_t* dyntracer,
   else if(assignment_type == DYNTRACE_ASSIGNMENT_ASSIGN) {
     if (TYPEOF(rhs) == CLOSXP) {
       function_call->set_dynamic_call();
-      state.serialize_dynamic_call_site_(function_call, lhs, rhs);
+      state.serialize_dynamic_call_site_specials(function_call, lhs, rhs);
     }
   }
   
