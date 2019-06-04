@@ -70,14 +70,14 @@ void closure_entry(dyntracer_t* dyntracer,
     //     while(loopy);
     // }
 
-    std::string function_name = function_call->get_function_name();
-    if (function_name.compare("assign") == 0) {
-        state.process_dynamic_calls_for_closures(
-            function_name, function_call, 1);
-    } else if (function_name.compare("with") == 0) {
-        state.process_dynamic_calls_for_closures(
-            function_name, function_call, 1);
-    }
+    // std::string function_name = function_call->get_function_name();
+    // if (function_name.compare("assign") == 0) {
+    //     state.process_dynamic_calls_for_closures(
+    //         function_name, function_call, 1);
+    // } else if (function_name.compare("with") == 0) {
+    //     state.process_dynamic_calls_for_closures(
+    //         function_name, function_call, 1);
+    // }
 
     set_dispatch(function_call, dispatch);
 
@@ -173,10 +173,10 @@ void special_entry(dyntracer_t* dyntracer,
 
     Call* function_call = state.create_call(call, op, args, rho);
 
-    std::string function_name = function_call->get_function_name();
-    if (function_name.compare("<<-") == 0) {
-        state.process_dynamic_calls_for_specials(function_call);
-    }
+    // std::string function_name = function_call->get_function_name();
+    // if (function_name.compare("<<-") == 0) {
+    //     state.process_dynamic_calls_for_specials(function_call);
+    // }
 
     set_dispatch(function_call, dispatch);
 
@@ -249,6 +249,28 @@ void assignment_call(dyntracer_t* dyntracer,
                      const SEXP rhs,
                      const SEXP environment,
                      const SEXP rho) {
+  TracerState& state = tracer_state(dyntracer);
+  
+  state.enter_probe(Event::AssignmentCall);
+  
+  // retrieve the call that has been pushed by the closure/builtin/special probe
+  Call* function_call = state.get_stack_().peek().get_call();
+  std::string builtin_name = PRIMNAME(op);
+
+  if (builtin_name.compare("assign") == 0) {
+    if ((TYPEOF(rhs) == CLOSXP) and (rho != environment)) {
+      // increment the assign call instd of the .Internal call
+      Call* function_call2 = state.get_stack_().peek(2).get_call();
+      function_call2->set_dynamic_call();
+    }
+  }
+  else if(assignment_type == DYNTRACE_ASSIGNMENT_ASSIGN) {
+    if (TYPEOF(rhs) == CLOSXP) {
+      function_call->set_dynamic_call();  
+    }
+  }
+  
+  state.exit_probe(Event::AssignmentCall);
 }
 
 void context_jump(dyntracer_t* dyntracer,
