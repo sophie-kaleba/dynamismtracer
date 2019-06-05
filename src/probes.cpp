@@ -242,7 +242,7 @@ void jump_single_context(TracerState& state,
 }
 
 void assignment_call(dyntracer_t* dyntracer,
-                     const SEXP call,
+                         const SEXP call,
                      const SEXP op,
                      const enum dyntrace_assignment_t assignment_type,
                      const SEXP lhs,
@@ -253,21 +253,36 @@ void assignment_call(dyntracer_t* dyntracer,
   
   state.enter_probe(Event::AssignmentCall);
   
-  // retrieve the call that has been pushed by the closure/builtin/special probe
-  Call* function_call = state.get_stack_().peek().get_call();
-  std::string builtin_name = PRIMNAME(op);
-
-  if (builtin_name.compare("assign") == 0) {
-    if ((TYPEOF(rhs) == CLOSXP) and (rho != environment)) {
-      // increment the assign call instd of the .Internal call
-      Call* function_call2 = state.get_stack_().peek(2).get_call();
-      function_call2->set_dynamic_call();
-    }
+  // <-, =, and assign(inherits=FALSE)
+  // only focus on assign, when envir is specified
+  if(assignment_type == DYNTRACE_ASSIGNMENT_DEFINE) {
+      Call* function_call = state.get_stack_().peek(2).get_call();
+      if (function_call->get_function_name().compare("assign") == 0) {
+          if (TYPEOF(rhs) == CLOSXP) {
+              if (environment != rho) {
+                  function_call->set_dynamic_call();    
+              }
+          }
+      }
   }
+  
   else if(assignment_type == DYNTRACE_ASSIGNMENT_ASSIGN) {
-    if (TYPEOF(rhs) == CLOSXP) {
-      function_call->set_dynamic_call();  
+    Call* function_call = state.get_stack_().peek(1).get_call();
+    if (function_call->get_function_name().compare("<<-") == 0) {
+      if (TYPEOF(rhs) == CLOSXP) {
+        function_call->set_dynamic_call();
+      }
+    else {
+      // assign where inherits=TRUE
+      // this bypass the envir parameter
+      Call* function_call = state.get_stack_().peek(2).get_call();
+      if (function_call->get_function_name().compare("assign") == 0) {
+        if (TYPEOF(rhs) == CLOSXP) {
+          function_call->set_dynamic_call(); 
+       }
+     }
     }
+   }
   }
   
   state.exit_probe(Event::AssignmentCall);
