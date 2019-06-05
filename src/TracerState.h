@@ -1273,6 +1273,22 @@ class TracerState {
         }
     }
 
+    Call* get_parent_call(sexptype_t call_type, int depth) {
+        Call* parent_call = nullptr;
+        ExecutionContextStack& stack = get_stack_();
+
+        for (auto iter = stack.rbegin(); iter != stack.rend(); ++iter) {
+            ExecutionContext& exec_ctxt = *iter;
+            if (exec_ctxt.get_type() == call_type) {
+                if (depth == 1) {
+                    return exec_ctxt.get_call();
+                }
+                --depth;
+            }
+        }
+        return parent_call;
+    }
+
     eval_depth_t get_evaluation_depth(Call* call) {
         ExecutionContextStack& stack = get_stack_();
         ExecutionContextStack::reverse_iterator iter;
