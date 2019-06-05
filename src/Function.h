@@ -109,6 +109,18 @@ class Function {
         return (get_primitive_offset() == PRIMITIVE_DOT_CALL_GRAPHICS_OFFSET_);
     }
 
+    bool is_left_assign() const {
+        return (get_primitive_offset() == PRIMITIVE_LEFT_ASSIGN_OFFSET_);
+    }
+
+    bool is_equal_assign() const {
+        return (get_primitive_offset() == PRIMITIVE_EQUAL_ASSIGN_OFFSET_);
+    }
+
+    bool is_super_assign() const {
+        return (get_primitive_offset() == PRIMITIVE_SUPER_ASSIGN_OFFSET_);
+    }
+
     const function_id_t& get_id() const {
         return id_;
     }
@@ -198,6 +210,10 @@ class Function {
     std::vector<std::string> names_;
     std::vector<CallSummary> call_summaries_;
 
+
+    static const int PRIMITIVE_LEFT_ASSIGN_OFFSET_ = 8;
+    static const int PRIMITIVE_EQUAL_ASSIGN_OFFSET_ = 9;
+    static const int PRIMITIVE_SUPER_ASSIGN_OFFSET_ = 10;
     static const int PRIMITIVE_RETURN_OFFSET_ = 6;
     static const int PRIMITIVE_CURLY_BRACKET_OFFSET_ = 11;
     static const int PRIMITIVE_DOT_INTERNAL_OFFSET_ = 26;
