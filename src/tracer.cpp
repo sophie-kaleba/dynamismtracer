@@ -28,7 +28,6 @@ SEXP create_dyntracer(SEXP output_dirpath,
     dyntracer->probe_builtin_exit = builtin_exit;
     dyntracer->probe_special_entry = special_entry;
     dyntracer->probe_special_exit = special_exit;
-    dyntracer->probe_assignment_call = assignment_call;
     dyntracer->state = state;
     dyntracer->probe_context_entry = context_entry;
     dyntracer->probe_context_jump = context_jump;

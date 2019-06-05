@@ -241,16 +241,6 @@ void jump_single_context(TracerState& state,
     }
 }
 
-void assignment_call(dyntracer_t* dyntracer,
-                     const SEXP call,
-                     const SEXP op,
-                     const enum dyntrace_assignment_t assignment_type,
-                     const SEXP lhs,
-                     const SEXP rhs,
-                     const SEXP environment,
-                     const SEXP rho) {
-}
-
 void context_jump(dyntracer_t* dyntracer,
                   const RCNTXT* context,
                   const SEXP return_value,

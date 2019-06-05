@@ -64,15 +64,6 @@ void special_exit(dyntracer_t* dyntracer,
                   const dyntrace_dispatch_t dispatch,
                   const SEXP return_value);
 
-void assignment_call(dyntracer_t* dyntracer,
-                     const SEXP call,
-                     const SEXP op,
-                     const enum dyntrace_assignment_t assignment_type,
-                     const SEXP lhs,
-                     const SEXP rhs,
-                     const SEXP environment,
-                     const SEXP rho);
-
 void context_entry(dyntracer_t* dyntracer, const RCNTXT*);
 
 void context_jump(dyntracer_t* dyntracer,

@@ -22,6 +22,10 @@ class ExecutionContext {
     /* defined in cpp file to get around cyclic dependency issues. */
     explicit ExecutionContext(Call* call);
 
+    sexptype_t get_type() const {
+        return type_;
+    }
+
     bool is_promise() const {
         return (type_ == PROMSXP);
     }
