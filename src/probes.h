@@ -72,5 +72,24 @@ void context_jump(dyntracer_t* dyntracer,
                   int restart);
 
 void context_exit(dyntracer_t* dyntracer, const RCNTXT*);
+
+void environment_variable_define(dyntracer_t* dyntracer,
+                                 const SEXP symbol,
+                                 const SEXP value,
+                                 const SEXP rho);
+
+void environment_variable_assign(dyntracer_t* dyntracer,
+                                 const SEXP symbol,
+                                 const SEXP value,
+                                 const SEXP rho);
+
+void environment_variable_remove(dyntracer_t* dyntracer,
+                                 const SEXP symbol,
+                                 const SEXP rho);
+
+void environment_variable_lookup(dyntracer_t* dyntracer,
+                                 const SEXP symbol,
+                                 const SEXP value,
+                                 const SEXP rho);
 };
 #endif /* DYNAMISMTRACER_PROBES_H */

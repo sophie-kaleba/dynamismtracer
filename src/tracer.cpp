@@ -32,6 +32,10 @@ SEXP create_dyntracer(SEXP output_dirpath,
     dyntracer->probe_context_entry = context_entry;
     dyntracer->probe_context_jump = context_jump;
     dyntracer->probe_context_exit = context_exit;
+    dyntracer->probe_environment_variable_define = environment_variable_define;
+    dyntracer->probe_environment_variable_assign = environment_variable_assign;
+    dyntracer->probe_environment_variable_remove = environment_variable_remove;
+    dyntracer->probe_environment_variable_lookup = environment_variable_lookup;
     return dyntracer_to_sexp(dyntracer, "dyntracer.promise");
 }
 

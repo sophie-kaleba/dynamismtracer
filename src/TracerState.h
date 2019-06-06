@@ -2,6 +2,7 @@
 #define DYNAMISMTRACER_TRACER_STATE_H
 
 #include "Argument.h"
+#include "AssignmentContext.h"
 #include "Call.h"
 #include "Environment.h"
 #include "Event.h"
@@ -1353,6 +1354,27 @@ class TracerState {
     std::vector<unsigned int> object_count_;
     std::vector<std::pair<lifecycle_t, int>> lifecycle_summary_;
     std::vector<unsigned long int> event_counter_;
+     std::vector<AssignmentContext> assignment_stack_;
+    
+public: 
+  void push_assignment_stack(SEXP symbol, SEXP env) {
+    assignment_stack_.push_back(AssignmentContext(symbol,env));
+  }
+  
+  AssignmentContext& peek_assignment_stack() {
+    return assignment_stack_[assignment_stack_.size() - 1];
+  }
+  
+  bool assignment_stack_is_empty() {
+    return assignment_stack_.size() == 0;
+  }
+
+void pop_assignment_stack() {
+    assignment_stack_.pop_back();
+  }
+  
+  
+  
 };
 
 #endif /* DYNAMISMTRACER_TRACER_STATE_H */
