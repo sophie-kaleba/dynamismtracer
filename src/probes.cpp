@@ -282,7 +282,7 @@ void assignment_call(dyntracer_t* dyntracer,
        }
      }
     }
-   }
+     }
   }
   
   state.exit_probe(Event::AssignmentCall);
