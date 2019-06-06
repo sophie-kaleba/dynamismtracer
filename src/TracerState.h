@@ -89,6 +89,13 @@ class TracerState {
             truncate_,
             binary_,
             compression_level_);
+        
+        dynamic_call_srcref_data_table_ = dynalyzer_create_data_table(
+          output_dirpath_ + "/" + "dynamic_call_srcref",
+          {"line"},
+           truncate_,
+           binary_,
+           compression_level_);
 
         function_definitions_data_table_ = dynalyzer_create_data_table(
             output_dirpath_ + "/" + "function_definitions",
@@ -267,6 +274,7 @@ class TracerState {
         delete call_summaries_data_table_;
         delete dynamic_call_summaries_data_table_;
         delete function_definitions_data_table_;
+        delete dynamic_call_srcref_data_table_;
         delete arguments_data_table_;
         delete side_effects_data_table_;
         delete promises_data_table_;
@@ -1056,6 +1064,7 @@ class TracerState {
     DataTableStream* call_summaries_data_table_;
     DataTableStream* dynamic_call_summaries_data_table_;
     DataTableStream* function_definitions_data_table_;
+    DataTableStream* dynamic_call_srcref_data_table_;
     std::unordered_map<SEXP, Function*> functions_;
     std::unordered_map<function_id_t, Function*> function_cache_;
 
@@ -1071,7 +1080,7 @@ class TracerState {
         for (std::size_t i = 0; i < function->get_summary_count(); ++i) {
             const CallSummary& call_summary = function->get_call_summary(i);
 
-            if (call_summary.get_dynamic_call_count() > 0) {
+
                 dynamic_call_summaries_data_table_->write_row(
                     function->get_id(),
                     function->get_namespace(),
@@ -1083,7 +1092,7 @@ class TracerState {
                     sexptype_to_string(call_summary.get_return_value_type()),
                     call_summary.get_call_count(),
                     call_summary.get_dynamic_call_count());
-            }
+
         }
     }
 
@@ -1122,6 +1131,10 @@ class TracerState {
     }
 
   public:
+    void serialize_dynamic_call_srcref_(int line) {
+      dynamic_call_srcref_data_table_->write_row(line);
+    }
+    
     void identify_side_effect_creators(const Variable& var, const SEXP env) {
         bool direct = true;
         ExecutionContextStack& stack = get_stack_();

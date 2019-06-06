@@ -1,6 +1,8 @@
 #include "probes.h"
 
 #include "TracerState.h"
+#include <iostream>
+#include <fstream>
 
 inline TracerState& tracer_state(dyntracer_t* dyntracer) {
     return *(static_cast<TracerState*>(dyntracer->state));
@@ -70,14 +72,14 @@ void closure_entry(dyntracer_t* dyntracer,
     //     while(loopy);
     // }
 
-    std::string function_name = function_call->get_function_name();
-    if (function_name.compare("assign") == 0) {
-        state.process_dynamic_calls_for_closures(
-            function_name, function_call, 1);
-    } else if (function_name.compare("with") == 0) {
-        state.process_dynamic_calls_for_closures(
-            function_name, function_call, 1);
-    }
+    // std::string function_name = function_call->get_function_name();
+    // if (function_name.compare("assign") == 0) {
+    //     state.process_dynamic_calls_for_closures(
+    //         function_name, function_call, 1);
+    // } else if (function_name.compare("with") == 0) {
+    //     state.process_dynamic_calls_for_closures(
+    //         function_name, function_call, 1);
+    // }
 
     set_dispatch(function_call, dispatch);
 
@@ -178,6 +180,12 @@ void special_entry(dyntracer_t* dyntracer,
     if (function->is_super_assign()) {
       state.push_assignment_stack(CAR(args),rho);
     }
+    else if (function->is_left_assign()) {
+      state.push_assignment_stack(CAR(args),rho);
+    }
+    else if (function->is_equal_assign()) {
+      state.push_assignment_stack(CAR(args),rho);
+    }
 
     set_dispatch(function_call, dispatch);
 
@@ -208,6 +216,12 @@ void special_exit(dyntracer_t* dyntracer,
     Function * function = function_call->get_function();
     
     if (function->is_super_assign()) {
+      state.pop_assignment_stack();
+    }
+    else if (function->is_left_assign()) {
+      state.pop_assignment_stack();
+    }
+    else if (function->is_equal_assign()) {
       state.pop_assignment_stack();
     }
 
@@ -328,11 +342,17 @@ void environment_variable_define(dyntracer_t* dyntracer,
   if ((!state.assignment_stack_is_empty())
     and (state.peek_assignment_stack().get_symbol() == symbol)
     and (state.peek_assignment_stack().get_environment() != rho)
-    and (type_of_sexp(value) == CLOSXP)) 
+      and (type_of_sexp(value) == CLOSXP)) 
     {
     Call * assignment_call = state.get_parent_call(SPECIALSXP, 1);
     assignment_call->set_dynamic_call();
+    state.serialize_dynamic_call_srcref_(R_ParseContextLine);
+    // std::ofstream myfile;
+    // myfile.open ("./output/example.txt", std::ios_base::app);
+    // myfile << R_ParseContextLine << "\n";
+    // myfile.close();
     }
+    
   
   state.exit_probe(Event::EnvironmentVariableDefine);
 }
@@ -352,6 +372,11 @@ void environment_variable_assign(dyntracer_t* dyntracer,
     {
     Call * assignment_call = state.get_parent_call(SPECIALSXP, 1);
     assignment_call->set_dynamic_call();
+    state.serialize_dynamic_call_srcref_(R_ParseContextLine);
+    // std::ofstream myfile;
+    // myfile.open ("./output/example.txt", std::ios_base::app);
+    // myfile << R_ParseContextLine << "\n";
+    // myfile.close();
     }
   
   state.exit_probe(Event::EnvironmentVariableAssign);
