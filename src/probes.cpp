@@ -72,8 +72,14 @@ void closure_entry(dyntracer_t* dyntracer,
     //     while(loopy);
     // }
 
-    // std::string function_name = function_call->get_function_name();
-    // if (function_name.compare("assign") == 0) {
+    std::string function_name = function_call->get_function_name();
+    if (function_name.compare("assign") == 0) {
+      Argument* arg = function_call->get_argument(0);
+      DenotedValue* value = arg->get_denoted_value();
+      SEXP expr = value->get_expression(); // returns a STRSXP
+      SEXP expr_symbol = Rf_install(CHAR(asChar(expr)));
+      state.push_assignment_stack(expr_symbol,rho);
+    }
     //     state.process_dynamic_calls_for_closures(
     //         function_name, function_call, 1);
     // } else if (function_name.compare("with") == 0) {
@@ -106,6 +112,11 @@ void closure_exit(dyntracer_t* dyntracer,
     }
 
     Call* function_call = exec_ctxt.get_closure();
+    
+    std::string function_name = function_call->get_function_name();
+    if (function_name.compare("assign") == 0) {
+      state.pop_assignment_stack();
+    }
 
     function_call->set_return_value_type(type_of_sexp(return_value));
 
@@ -340,19 +351,21 @@ void environment_variable_define(dyntracer_t* dyntracer,
   state.enter_probe(Event::EnvironmentVariableDefine);
   
   if ((!state.assignment_stack_is_empty())
-    and (state.peek_assignment_stack().get_symbol() == symbol)
-    and (state.peek_assignment_stack().get_environment() != rho)
-      and (type_of_sexp(value) == CLOSXP)) 
-    {
-    Call * assignment_call = state.get_parent_call(SPECIALSXP, 1);
-    assignment_call->set_dynamic_call();
-    state.serialize_dynamic_call_srcref_(R_ParseContextLine);
-    // std::ofstream myfile;
-    // myfile.open ("./output/example.txt", std::ios_base::app);
-    // myfile << R_ParseContextLine << "\n";
-    // myfile.close();
-    }
+  and (state.peek_assignment_stack().get_symbol() == symbol)
+  and (state.peek_assignment_stack().get_environment() != rho)
+  and (type_of_sexp(value) == CLOSXP))    
+  {
+    Call * assignment_call = NULL;
     
+    if (state.get_stack_().peek(2).is_special()) {
+      assignment_call = state.get_parent_call(SPECIALSXP, 1);
+    }
+    else if (state.get_stack_().peek(2).is_closure()) {
+      assignment_call = state.get_parent_call(CLOSXP, 1); 
+    }
+      assignment_call->set_dynamic_call();
+      state.serialize_dynamic_call_srcref_(R_ParseContextLine);
+    }
   
   state.exit_probe(Event::EnvironmentVariableDefine);
 }
@@ -370,13 +383,16 @@ void environment_variable_assign(dyntracer_t* dyntracer,
     and (state.peek_assignment_stack().get_environment() != rho)
     and (type_of_sexp(value) == CLOSXP)) 
     {
-    Call * assignment_call = state.get_parent_call(SPECIALSXP, 1);
-    assignment_call->set_dynamic_call();
-    state.serialize_dynamic_call_srcref_(R_ParseContextLine);
-    // std::ofstream myfile;
-    // myfile.open ("./output/example.txt", std::ios_base::app);
-    // myfile << R_ParseContextLine << "\n";
-    // myfile.close();
+      Call * assignment_call = NULL;
+      
+      if (state.get_stack_().peek(2).is_special()) {
+        assignment_call = state.get_parent_call(SPECIALSXP, 1);
+      }
+      else if (state.get_stack_().peek(2).is_closure()) {
+        assignment_call = state.get_parent_call(CLOSXP, 1); 
+      }
+      assignment_call->set_dynamic_call();
+      state.serialize_dynamic_call_srcref_(R_ParseContextLine);
     }
   
   state.exit_probe(Event::EnvironmentVariableAssign);
