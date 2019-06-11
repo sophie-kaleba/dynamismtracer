@@ -78,7 +78,8 @@ void closure_entry(dyntracer_t* dyntracer,
       DenotedValue* value = arg->get_denoted_value();
       SEXP expr = value->get_expression(); // returns a STRSXP
       SEXP expr_symbol = Rf_install(CHAR(asChar(expr)));
-      state.push_assignment_stack(expr_symbol,rho);
+      SEXP calling_env = state.get_stack_().peek(1).get_r_context()->sysparent;
+      state.push_assignment_stack(expr_symbol,calling_env);
     }
     //     state.process_dynamic_calls_for_closures(
     //         function_name, function_call, 1);
