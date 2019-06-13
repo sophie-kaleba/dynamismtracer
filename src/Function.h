@@ -121,6 +121,10 @@ class Function {
         return (get_primitive_offset() == PRIMITIVE_SUPER_ASSIGN_OFFSET_);
     }
 
+    bool is_fast_subassign() const {
+        return (get_primitive_offset() == PRIMITIVE_FAST_SUBASSIGN_OFFSET_);
+    }
+
     const function_id_t& get_id() const {
         return id_;
     }
@@ -214,6 +218,7 @@ class Function {
     static const int PRIMITIVE_LEFT_ASSIGN_OFFSET_ = 8;
     static const int PRIMITIVE_EQUAL_ASSIGN_OFFSET_ = 9;
     static const int PRIMITIVE_SUPER_ASSIGN_OFFSET_ = 10;
+    static const int PRIMITIVE_FAST_SUBASSIGN_OFFSET_ = 20;
     static const int PRIMITIVE_RETURN_OFFSET_ = 6;
     static const int PRIMITIVE_CURLY_BRACKET_OFFSET_ = 11;
     static const int PRIMITIVE_DOT_INTERNAL_OFFSET_ = 26;

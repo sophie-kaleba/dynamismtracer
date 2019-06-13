@@ -14,6 +14,8 @@ bool sexp_to_bool(SEXP value);
 
 int sexp_to_int(SEXP value);
 
+SEXP strsxp_to_sym(SEXP value);
+
 std::string sexp_to_string(SEXP value);
 
 std::string compute_hash(const char* data);

@@ -41,6 +41,10 @@ bool sexp_to_bool(SEXP value) {
     return LOGICAL(value)[0] == TRUE;
 }
 
+SEXP strsxp_to_sym(SEXP value) {
+    return Rf_install(CHAR(asChar(value)));
+}
+
 int sexp_to_int(SEXP value) {
     return (int) *INTEGER(value);
 }

@@ -2,7 +2,7 @@
 #define DYNAMISMTRACER_TRACER_STATE_H
 
 #include "Argument.h"
-#include "AssignmentContext.h"
+#include "AssignmentState.h"
 #include "Call.h"
 #include "Environment.h"
 #include "Event.h"
@@ -92,10 +92,22 @@ class TracerState {
         
         dynamic_call_srcref_data_table_ = dynalyzer_create_data_table(
           output_dirpath_ + "/" + "dynamic_call_srcref",
-          {"line"},
+            {"line"},
            truncate_,
            binary_,
            compression_level_);
+
+        dynamic_function_definitions_data_table_ = dynalyzer_create_data_table(
+            output_dirpath_ + "/" + "dynamic_function_definitions",
+            {"function_id",
+             "package",
+             "function_name",
+             "formal_parameter_count",
+             "byte_compiled",
+             "definition"},
+            truncate_,
+            binary_,
+            compression_level_);
 
         function_definitions_data_table_ = dynalyzer_create_data_table(
             output_dirpath_ + "/" + "function_definitions",
@@ -273,6 +285,7 @@ class TracerState {
         delete object_counts_data_table_;
         delete call_summaries_data_table_;
         delete dynamic_call_summaries_data_table_;
+        delete dynamic_function_definitions_data_table_;
         delete function_definitions_data_table_;
         delete dynamic_call_srcref_data_table_;
         delete arguments_data_table_;
@@ -1064,6 +1077,7 @@ class TracerState {
     DataTableStream* call_summaries_data_table_;
     DataTableStream* dynamic_call_summaries_data_table_;
     DataTableStream* function_definitions_data_table_;
+    DataTableStream* dynamic_function_definitions_data_table_;
     DataTableStream* dynamic_call_srcref_data_table_;
     std::unordered_map<SEXP, Function*> functions_;
     std::unordered_map<function_id_t, Function*> function_cache_;
@@ -1080,7 +1094,7 @@ class TracerState {
         for (std::size_t i = 0; i < function->get_summary_count(); ++i) {
             const CallSummary& call_summary = function->get_call_summary(i);
 
-
+            if (call_summary.get_dynamic_call_count() > 0) {
                 dynamic_call_summaries_data_table_->write_row(
                     function->get_id(),
                     function->get_namespace(),
@@ -1092,6 +1106,7 @@ class TracerState {
                     sexptype_to_string(call_summary.get_return_value_type()),
                     call_summary.get_call_count(),
                     call_summary.get_dynamic_call_count());
+            }
 
         }
     }
@@ -1130,9 +1145,21 @@ class TracerState {
             function->get_definition());
     }
 
+
   public:
     void serialize_dynamic_call_srcref_(int line) {
       dynamic_call_srcref_data_table_->write_row(line);
+    }
+
+    void serialize_dynamic_function_definition_(const Function* function,
+                                    const std::string& names) {
+    dynamic_function_definitions_data_table_->write_row(
+        function->get_id(),
+        function->get_namespace(),
+        names,
+        function->get_formal_parameter_count(),
+        function->is_byte_compiled(),
+        function->get_definition());
     }
     
     void identify_side_effect_creators(const Variable& var, const SEXP env) {
@@ -1367,14 +1394,14 @@ class TracerState {
     std::vector<unsigned int> object_count_;
     std::vector<std::pair<lifecycle_t, int>> lifecycle_summary_;
     std::vector<unsigned long int> event_counter_;
-     std::vector<AssignmentContext> assignment_stack_;
+     std::vector<AssignmentState> assignment_stack_;
     
 public: 
-  void push_assignment_stack(SEXP symbol, SEXP env) {
-    assignment_stack_.push_back(AssignmentContext(symbol,env));
+  void push_assignment_stack(SEXP symbol, SEXP env, sexptype_t type, SEXP calling_env) {
+    assignment_stack_.push_back(AssignmentState(symbol,env, type, calling_env));
   }
   
-  AssignmentContext& peek_assignment_stack() {
+  AssignmentState& peek_assignment_stack() {
     return assignment_stack_[assignment_stack_.size() - 1];
   }
   
