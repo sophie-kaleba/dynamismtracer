@@ -2,6 +2,7 @@
 #define DYNAMISMTRACER_TRACER_STATE_H
 
 #include "Argument.h"
+#include "AssignmentState.h"
 #include "Call.h"
 #include "Environment.h"
 #include "Event.h"
@@ -85,6 +86,18 @@ class TracerState {
              "return_value_type",
              "call_count",
              "dyn_call_count"},
+            truncate_,
+            binary_,
+            compression_level_);
+
+        dynamic_function_definitions_data_table_ = dynalyzer_create_data_table(
+            output_dirpath_ + "/" + "dynamic_function_definitions",
+            {"function_id",
+             "package",
+             "function_name",
+             "formal_parameter_count",
+             "byte_compiled",
+             "definition"},
             truncate_,
             binary_,
             compression_level_);
@@ -1006,46 +1019,6 @@ class TracerState {
         }
     }
 
-    void update_dyn_call_counter(sexptype_t expression_type,
-                                 SEXP param,
-                                 Call* fn_call) {
-        if (expression_type == LANGSXP) {
-            std::string sym_name = CHAR(PRINTNAME(CAR(param)));
-            if (sym_name.compare("function") == 0) {
-                fn_call->set_dynamic_call();
-            }
-        } else if (expression_type == SYMSXP) {
-            // TODO- needs a hook
-            // this symbol could potentially point to a function. We need to
-            // inspect the environment to know
-        }
-    }
-
-    void process_dynamic_calls_for_closures(std::string fn_name,
-                                            Call* fn_call,
-                                            int arg_index) {
-        Argument* arg = fn_call->get_argument(arg_index);
-        DenotedValue* value = arg->get_denoted_value();
-        SEXP expr = value->get_expression();
-        sexptype_t expression_type = type_of_sexp(expr);
-
-        update_dyn_call_counter(expression_type, expr, fn_call);
-    }
-
-    /* f <<- 1+2
-     * op is <<-
-     * CAR(args) is the symbol f
-     * CDR(args) is a pairlist, whose 1st value is a function call - OLD
-     */
-    void process_dynamic_calls_for_specials(Call* fn_call) {
-        SEXP fn_args = fn_call->get_args();
-        SEXP right_param = CADR(fn_args); // first element of the object pointed
-                                          // by the right parameter of <<-
-        sexptype_t expression_type = type_of_sexp(right_param);
-
-        update_dyn_call_counter(expression_type, right_param, fn_call);
-    }
-
   private:
     void destroy_function_(Function* function) {
         serialize_function_(function);
@@ -1055,6 +1028,7 @@ class TracerState {
     DataTableStream* call_summaries_data_table_;
     DataTableStream* dynamic_call_summaries_data_table_;
     DataTableStream* function_definitions_data_table_;
+    DataTableStream* dynamic_function_definitions_data_table_;
     std::unordered_map<SEXP, Function*> functions_;
     std::unordered_map<function_id_t, Function*> function_cache_;
 
@@ -1120,7 +1094,19 @@ class TracerState {
             function->get_definition());
     }
 
+
   public:
+    void serialize_dynamic_function_definition_(const Function* function,
+                                    const std::string& names) {
+    dynamic_function_definitions_data_table_->write_row(
+        function->get_id(),
+        function->get_namespace(),
+        names,
+        function->get_formal_parameter_count(),
+        function->is_byte_compiled(),
+        function->get_definition());
+    }
+
     void identify_side_effect_creators(const Variable& var, const SEXP env) {
         bool direct = true;
         ExecutionContextStack& stack = get_stack_();
@@ -1353,6 +1339,27 @@ class TracerState {
     std::vector<unsigned int> object_count_;
     std::vector<std::pair<lifecycle_t, int>> lifecycle_summary_;
     std::vector<unsigned long int> event_counter_;
+
+    std::vector<AssignmentState> assignment_stack_;
+    
+public: 
+  void push_assignment_stack(SEXP symbol, SEXP env, sexptype_t type, SEXP calling_env) {
+    assignment_stack_.push_back(AssignmentState(symbol,env, type, calling_env));
+  }
+  
+  AssignmentState& peek_assignment_stack() {
+    return assignment_stack_[assignment_stack_.size() - 1];
+  }
+  
+  bool assignment_stack_is_empty() {
+    return assignment_stack_.size() == 0;
+  }
+
+void pop_assignment_stack() {
+    assignment_stack_.pop_back();
+  }
+  
+  
 };
 
 #endif /* DYNAMISMTRACER_TRACER_STATE_H */

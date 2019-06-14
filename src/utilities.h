@@ -12,6 +12,8 @@ char* copy_string(char* destination, const char* source, size_t buffer_size);
 
 bool sexp_to_bool(SEXP value);
 
+SEXP strsxp_to_sym(SEXP value);
+
 int sexp_to_int(SEXP value);
 
 std::string sexp_to_string(SEXP value);
