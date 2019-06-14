@@ -1339,25 +1339,39 @@ class TracerState {
     std::vector<unsigned int> object_count_;
     std::vector<std::pair<lifecycle_t, int>> lifecycle_summary_;
     std::vector<unsigned long int> event_counter_;
-
     std::vector<AssignmentState> assignment_stack_;
     
 public: 
-  void push_assignment_stack(SEXP symbol, SEXP env, sexptype_t type, SEXP calling_env) {
-    assignment_stack_.push_back(AssignmentState(symbol,env, type, calling_env));
-  }
-  
-  AssignmentState& peek_assignment_stack() {
-    return assignment_stack_[assignment_stack_.size() - 1];
-  }
-  
-  bool assignment_stack_is_empty() {
-    return assignment_stack_.size() == 0;
-  }
 
-void pop_assignment_stack() {
-    assignment_stack_.pop_back();
-  }
+    bool is_fresh_environment(SEXP rho) {
+        ExecutionContextStack& stack = get_stack_();
+        bool fresh = true;
+
+        for (auto iter = stack.rbegin(); iter != stack.rend(); ++iter) {
+            ExecutionContext& exec_ctxt = *iter;
+            if (!exec_ctxt.is_r_context()) {
+                fresh = fresh && (exec_ctxt.get_call()->get_environment() != rho); 
+            }
+        }
+        return fresh;
+    }
+
+
+    void push_assignment_stack(SEXP symbol, SEXP env, sexptype_t type, SEXP calling_env) {
+        assignment_stack_.push_back(AssignmentState(symbol,env, type, calling_env));
+    }
+    
+    AssignmentState& peek_assignment_stack() {
+        return assignment_stack_[assignment_stack_.size() - 1];
+    }
+    
+    bool assignment_stack_is_empty() {
+        return assignment_stack_.size() == 0;
+    }
+
+    void pop_assignment_stack() {
+        assignment_stack_.pop_back();
+    }
   
   
 };

@@ -369,6 +369,7 @@ void environment_variable_define(dyntracer_t* dyntracer,
   if ((!state.assignment_stack_is_empty())
   and (state.peek_assignment_stack().get_symbol() == symbol)
   and (state.peek_assignment_stack().get_calling_environment() != rho)
+  and (!state.is_fresh_environment(rho))
   and (type_of_sexp(value) == CLOSXP))    
   {
       sexptype_t type = state.peek_assignment_stack().get_type();
@@ -404,6 +405,7 @@ void environment_variable_assign(dyntracer_t* dyntracer,
     if ((!state.assignment_stack_is_empty())
     and (state.peek_assignment_stack().get_symbol() == symbol)
     and (state.peek_assignment_stack().get_calling_environment() != rho)
+    and (!state.is_fresh_environment(rho))
     and (type_of_sexp(value) == CLOSXP)) 
     {
       sexptype_t type = state.peek_assignment_stack().get_type();
