@@ -279,6 +279,7 @@ class TracerState {
         delete call_summaries_data_table_;
         delete dynamic_call_summaries_data_table_;
         delete function_definitions_data_table_;
+        delete dynamic_function_definitions_data_table_;
         delete arguments_data_table_;
         delete side_effects_data_table_;
         delete promises_data_table_;
