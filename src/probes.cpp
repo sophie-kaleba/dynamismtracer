@@ -73,26 +73,26 @@ void closure_entry(dyntracer_t* dyntracer,
     std::string function_name = function_call->get_function_name();
 
     if (function_name.compare("assign") == 0) {
-      Argument* arg = function_call->get_argument(0);
+        Argument* arg = function_call->get_argument(0);
 
-      DenotedValue* value = arg->get_denoted_value();
+        DenotedValue* value = arg->get_denoted_value();
 
-      SEXP expr = value->get_expression(); // returns a STRSXP
+        SEXP lhs = value->get_expression(); // returns a STRSXP
 
-      SEXP expr_symbol = strsxp_to_sym(expr);
+        //SEXP expr_symbol = strsxp_to_sym(expr);
 
-      // using the context catches the calls from global scope
-      // TODO- check if this way is strictly equal to the one below
-      // SEXP calling_env = state.get_stack_().peek(1).get_r_context()->sysparent; 
-      Call * parent_call = state.get_parent_call(CLOSXP, 1);
+        // using the context catches the calls from global scope
+        // TODO- check if this way is strictly equal to the one below
+        // SEXP calling_env = state.get_stack_().peek(1).get_r_context()->sysparent; 
+        Call * parent_call = state.get_parent_call(CLOSXP, 1);
 
-      SEXP calling_env = R_GlobalEnv;
-      
-      if (parent_call != NULL) {
-        calling_env = parent_call->get_environment();
+        SEXP caller_env = R_GlobalEnv;
+        
+        if (parent_call != NULL) {
+            caller_env = parent_call->get_environment();
         }
 
-      state.push_assignment_stack(expr_symbol, rho, type_of_sexp(op), calling_env);
+        state.get_assignment_stack_().push(lhs, rho, type_of_sexp(op), caller_env);
     }
 
     set_dispatch(function_call, dispatch);
@@ -124,7 +124,7 @@ void closure_exit(dyntracer_t* dyntracer,
     std::string function_name = function_call->get_function_name();
 
     if (function_name.compare("assign") == 0) {
-      state.pop_assignment_stack();
+        state.get_assignment_stack_().pop();
     }
 
     function_call->set_return_value_type(type_of_sexp(return_value));
@@ -197,17 +197,12 @@ void special_entry(dyntracer_t* dyntracer,
 
     Function * function = function_call->get_function();
     
-    if (function->is_super_assign()) {
-      state.push_assignment_stack(CAR(args),rho, type_of_sexp(op), rho);
-    }
-    else if (function->is_left_assign()) {
-      state.push_assignment_stack(CAR(args),rho, type_of_sexp(op), rho);
-    }
-    else if (function->is_equal_assign()) {
-      state.push_assignment_stack(CAR(args),rho, type_of_sexp(op), rho);
-    }
-    else if (function->is_fast_subassign()) {
-      state.push_assignment_stack(CAR(args),rho, type_of_sexp(op), rho);
+    if ((function->is_super_assign()) 
+    or (function->is_left_assign()) 
+    or (function->is_equal_assign()) 
+    or (function->is_subassign2()))
+    {
+        state.get_assignment_stack_().push(CAR(args),rho, type_of_sexp(op), rho);
     }
 
     set_dispatch(function_call, dispatch);
@@ -239,17 +234,12 @@ void special_exit(dyntracer_t* dyntracer,
     
     Function * function = function_call->get_function();
     
-    if (function->is_super_assign()) {
-      state.pop_assignment_stack();
-    }
-    else if (function->is_left_assign()) {
-      state.pop_assignment_stack();
-    }
-    else if (function->is_equal_assign()) {
-      state.pop_assignment_stack();
-    }
-    else if (function->is_fast_subassign()) {
-      state.pop_assignment_stack();
+    if ((function->is_super_assign()) 
+    or (function->is_left_assign()) 
+    or (function->is_equal_assign()) 
+    or (function->is_subassign2()))
+    {
+        state.get_assignment_stack_().pop();
     }
 
     function_call->set_return_value_type(type_of_sexp(return_value));
@@ -327,8 +317,6 @@ void context_jump(dyntracer_t* dyntracer,
             jump_single_context(state, *iter, returned, JUMPSXP, rho);
         }
 
-        jump_single_context(
-            state, *end_iter, returned, type_of_sexp(return_value), rho);
     }
 
     state.exit_probe(Event::ContextJump);
@@ -362,91 +350,90 @@ void environment_variable_define(dyntracer_t* dyntracer,
                                  const SEXP symbol,
                                  const SEXP value,
                                  const SEXP rho) {
-  TracerState& state = tracer_state(dyntracer);
-  
-  state.enter_probe(Event::EnvironmentVariableDefine);
-  
-  if ((!state.assignment_stack_is_empty())
-  and (state.peek_assignment_stack().get_symbol() == symbol)
-  and (state.peek_assignment_stack().get_calling_environment() != rho)
-  and (!state.is_fresh_environment(rho))
-  and (type_of_sexp(value) == CLOSXP))    
-  {
-      sexptype_t type = state.peek_assignment_stack().get_type();
+    TracerState& state = tracer_state(dyntracer);
+    
+    state.enter_probe(Event::EnvironmentVariableDefine);
+    
+    if ((!state.get_assignment_stack_().is_empty())
+    and (state.get_assignment_stack_().peek().get_symbol_name().compare(to_string(get_name((symbol)))) == 0)
+    and (state.get_assignment_stack_().peek().get_caller_environment() != rho)
+    and (type_of_sexp(value) == CLOSXP))     
+    {
+        sexptype_t type = state.get_assignment_stack_().peek().get_type();
 
-      Call * assignment_call = state.get_parent_call(type, 1); 
+        Call * assignment_call = state.get_parent_call(type, 1); 
 
-      assignment_call->set_dynamic_call();
+        assignment_call->set_dynamic_call();
+        assignment_call->set_symbol_name(symbol);
+        assignment_call->set_from_fresh_environment(state.is_fresh_environment(rho));
 
-      if (state.peek_assignment_stack().get_calling_environment() != R_GlobalEnv) {
-        Function * parent_function = state.get_parent_call(type, 2)->get_function();
+        if (state.get_assignment_stack_().peek().get_caller_environment() != R_GlobalEnv) {
+            Call * parent_call = state.get_caller();
 
-        std::string parent_function_names = parent_function->get_name_string();
-
-        state.serialize_dynamic_function_definition_(parent_function, parent_function_names);
-      }
-      else {
-        // the function has been called from the global environment
-        state.serialize_dynamic_function_definition_(assignment_call->get_function(), "called from global scope");
-      }
+            state.serialize_dynamic_function_definition_(parent_call->get_function(), parent_call->get_function_name());
+        }
+        else {
+            // the function has been called from the global environment
+            state.serialize_dynamic_function_definition_(assignment_call->get_function(), "called from global scope");
+        }
     }
-  
-  state.exit_probe(Event::EnvironmentVariableDefine);
+    
+    state.exit_probe(Event::EnvironmentVariableDefine);
 }
 
 void environment_variable_assign(dyntracer_t* dyntracer,
                                  const SEXP symbol,
                                  const SEXP value,
                                  const SEXP rho) {
-  TracerState& state = tracer_state(dyntracer);
-  
-  state.enter_probe(Event::EnvironmentVariableAssign);
+    TracerState& state = tracer_state(dyntracer);
+    
+    state.enter_probe(Event::EnvironmentVariableAssign);
 
-    if ((!state.assignment_stack_is_empty())
-    and (state.peek_assignment_stack().get_symbol() == symbol)
-    and (state.peek_assignment_stack().get_calling_environment() != rho)
-    and (!state.is_fresh_environment(rho))
+    if ((!state.get_assignment_stack_().is_empty())
+    and (state.get_assignment_stack_().peek().get_symbol_name().compare(to_string(get_name(symbol))) == 0)
+    and (state.get_assignment_stack_().peek().get_caller_environment() != rho)
     and (type_of_sexp(value) == CLOSXP)) 
     {
-      sexptype_t type = state.peek_assignment_stack().get_type();
+        sexptype_t type = state.get_assignment_stack_().peek().get_type();
 
-      Call * assignment_call = state.get_parent_call(type, 1); 
+        Call * assignment_call = state.get_parent_call(type, 1); 
 
-      assignment_call->set_dynamic_call();
+        assignment_call->set_dynamic_call();
+        assignment_call->set_redefining();
+        assignment_call->set_symbol_name(symbol);
+        assignment_call->set_from_fresh_environment(state.is_fresh_environment(rho));
 
-      if (state.peek_assignment_stack().get_calling_environment() != R_GlobalEnv) {
-        Function * parent_function = state.get_parent_call(type, 2)->get_function();
+        if (state.get_assignment_stack_().peek().get_caller_environment() != R_GlobalEnv) {
+            Call * parent_call = state.get_caller();
 
-        std::string parent_function_names = parent_function->get_name_string();
-
-        state.serialize_dynamic_function_definition_(parent_function, parent_function_names);
-      }
-      else {
-        // the function has been called from the global environment
-        state.serialize_dynamic_function_definition_(assignment_call->get_function(), "called from global scope");
-      }
+            state.serialize_dynamic_function_definition_(parent_call->get_function(), parent_call->get_function_name());
+        }
+        else {
+            // the function has been called from the global environment
+            state.serialize_dynamic_function_definition_(assignment_call->get_function(), "called from global scope");
+        }
     }
-  
-  state.exit_probe(Event::EnvironmentVariableAssign);
+    
+    state.exit_probe(Event::EnvironmentVariableAssign);
 }
 
 void environment_variable_remove(dyntracer_t* dyntracer,
                                  const SEXP symbol,
                                  const SEXP rho) {
-  TracerState& state = tracer_state(dyntracer);
-  
-  state.enter_probe(Event::EnvironmentVariableRemove);
-  
-  state.exit_probe(Event::EnvironmentVariableRemove);
+    TracerState& state = tracer_state(dyntracer);
+    
+    state.enter_probe(Event::EnvironmentVariableRemove);
+    
+    state.exit_probe(Event::EnvironmentVariableRemove);
 }
 
 void environment_variable_lookup(dyntracer_t* dyntracer,
                                  const SEXP symbol,
                                  const SEXP value,
                                  const SEXP rho) {
-  TracerState& state = tracer_state(dyntracer);
-  
-  state.enter_probe(Event::EnvironmentVariableLookup);
-  
-  state.exit_probe(Event::EnvironmentVariableLookup);
+    TracerState& state = tracer_state(dyntracer);
+    
+    state.enter_probe(Event::EnvironmentVariableLookup);
+    
+    state.exit_probe(Event::EnvironmentVariableLookup);
 }

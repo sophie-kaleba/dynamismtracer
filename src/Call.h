@@ -51,6 +51,14 @@ class Call {
         return dynamic_call_;
     }
 
+    bool is_redefining_symbol() const {
+        return redefining_;
+    }
+
+    void set_redefining() {
+        redefining_ = true;
+    }
+
     SEXP get_environment() const {
         return environment_;
     }
@@ -150,6 +158,34 @@ class Call {
         return missing_argument_positions;
     }
 
+
+    std::string get_symbol_name() const {
+        return symbol_name_;
+    }
+
+    sexptype_t get_symbol_type() const {
+        return symbol_type_;
+    }
+
+    bool from_fresh_environment() const {
+        return from_fresh_environment_;
+    }
+
+
+    void set_symbol_name(SEXP symbol) {
+        symbol_name_ = to_string(get_name(symbol));
+    }
+
+    void set_symbol_type(SEXP symbol) {
+        symbol_type_ = type_of_sexp(symbol);
+    }
+
+    void set_from_fresh_environment(bool environment_state) {
+        from_fresh_environment_ = environment_state;
+    }
+
+ 
+
   private:
     const call_id_t id_;
     const std::string function_name_;
@@ -164,8 +200,12 @@ class Call {
     int callee_counter_;
     bool dynamic_call_;
     bool wrapper_;
+    bool redefining_;
     std::vector<Argument*> arguments_;
     pos_seq_t force_order_;
+    std::string symbol_name_;
+    sexptype_t symbol_type_;
+    bool from_fresh_environment_;
 };
 
 #endif /* DYNAMISMTRACER_CALL_H */

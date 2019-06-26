@@ -121,8 +121,8 @@ class Function {
         return (get_primitive_offset() == PRIMITIVE_SUPER_ASSIGN_OFFSET_);
     }
 
-    bool is_fast_subassign() const {
-        return (get_primitive_offset() == PRIMITIVE_FAST_SUBASSIGN_OFFSET_);
+    bool is_subassign2() const {
+        return (get_primitive_offset() == PRIMITIVE_SUBASSIGN2_OFFSET_);
     }
 
     const function_id_t& get_id() const {
@@ -168,11 +168,12 @@ class Function {
             names_.push_back(call->get_function_name());
         }
 
-        for (i = 0; i < call_summaries_.size(); ++i) {
-            if (call_summaries_[i].try_to_merge(call)) {
-                return;
-            }
-        }
+        // TEMPORARY - disable the merging of results
+        // for (i = 0; i < call_summaries_.size(); ++i) {
+        //     if (call_summaries_[i].try_to_merge(call)) {
+        //         return;
+        //     }
+        // }
 
         call_summaries_.push_back(CallSummary(call));
     }
@@ -218,7 +219,7 @@ class Function {
     static const int PRIMITIVE_LEFT_ASSIGN_OFFSET_ = 8;
     static const int PRIMITIVE_EQUAL_ASSIGN_OFFSET_ = 9;
     static const int PRIMITIVE_SUPER_ASSIGN_OFFSET_ = 10;
-    static const int PRIMITIVE_FAST_SUBASSIGN_OFFSET_ = 20;
+    static const int PRIMITIVE_SUBASSIGN2_OFFSET_ = 20;
     static const int PRIMITIVE_RETURN_OFFSET_ = 6;
     static const int PRIMITIVE_CURLY_BRACKET_OFFSET_ = 11;
     static const int PRIMITIVE_DOT_INTERNAL_OFFSET_ = 26;

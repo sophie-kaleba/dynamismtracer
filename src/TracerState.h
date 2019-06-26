@@ -3,6 +3,7 @@
 
 #include "Argument.h"
 #include "AssignmentState.h"
+#include "AssignmentStateStack.h"
 #include "Call.h"
 #include "Environment.h"
 #include "Event.h"
@@ -85,7 +86,11 @@ class TracerState {
              "S4_method",
              "return_value_type",
              "call_count",
-             "dyn_call_count"},
+             "dyn_call_count",
+             "redefining_symbol", 
+             "symbol_name",
+             "environment_address",
+             "fresh_environment"},
             truncate_,
             binary_,
             compression_level_);
@@ -1056,7 +1061,11 @@ class TracerState {
                     call_summary.is_S4_method(),
                     sexptype_to_string(call_summary.get_return_value_type()),
                     call_summary.get_call_count(),
-                    call_summary.get_dynamic_call_count());
+                    call_summary.get_dynamic_call_count(),
+                    call_summary.get_redefining(),
+                    call_summary.get_symbol_name(),
+                    call_summary.get_environment_address(),
+                    call_summary.from_fresh_environment());
             }
         }
     }
@@ -1099,13 +1108,13 @@ class TracerState {
   public:
     void serialize_dynamic_function_definition_(const Function* function,
                                     const std::string& names) {
-    dynamic_function_definitions_data_table_->write_row(
-        function->get_id(),
-        function->get_namespace(),
-        names,
-        function->get_formal_parameter_count(),
-        function->is_byte_compiled(),
-        function->get_definition());
+        dynamic_function_definitions_data_table_->write_row(
+            function->get_id(),
+            function->get_namespace(),
+            names,
+            function->get_formal_parameter_count(),
+            function->is_byte_compiled(),
+            function->get_definition());
     }
 
     void identify_side_effect_creators(const Variable& var, const SEXP env) {
@@ -1276,6 +1285,42 @@ class TracerState {
         return parent_call;
     }
 
+    Call* get_caller() {
+        Call* caller = nullptr;
+        int idx = 1;
+        ExecutionContextStack& stack = get_stack_();
+        ExecutionContext& exec_ctxt = stack.peek(idx);
+
+        if (exec_ctxt.is_call()
+        and (exec_ctxt.get_call()->get_function()->is_dot_internal()))  {
+            idx++;
+        }
+
+        for (auto iter = stack.rbegin()+idx; iter != stack.rend(); ++iter) {
+            ExecutionContext& exec_ctxt = *iter;
+
+            if (exec_ctxt.is_call() 
+            and !exec_ctxt.get_call()->get_function()->is_curly_bracket()) {
+                return exec_ctxt.get_call();
+            }
+        }
+        return caller;
+    }
+
+    bool is_fresh_environment(SEXP rho) {
+        ExecutionContextStack& stack = get_stack_();
+        bool fresh = true;
+
+        for (auto iter = stack.rbegin(); iter != stack.rend(); ++iter) {
+            ExecutionContext& exec_ctxt = *iter;
+            if (!exec_ctxt.is_r_context()) {
+                fresh = fresh && (exec_ctxt.get_call()->get_environment() != rho); 
+            }
+        }
+        return fresh;
+}
+
+
     eval_depth_t get_evaluation_depth(Call* call) {
         ExecutionContextStack& stack = get_stack_();
         ExecutionContextStack::reverse_iterator iter;
@@ -1340,38 +1385,12 @@ class TracerState {
     std::vector<unsigned int> object_count_;
     std::vector<std::pair<lifecycle_t, int>> lifecycle_summary_;
     std::vector<unsigned long int> event_counter_;
-    std::vector<AssignmentState> assignment_stack_;
     
 public: 
+    AssignmentStateStack assignement_state_stack_;
 
-    bool is_fresh_environment(SEXP rho) {
-        ExecutionContextStack& stack = get_stack_();
-        bool fresh = true;
-
-        for (auto iter = stack.rbegin(); iter != stack.rend(); ++iter) {
-            ExecutionContext& exec_ctxt = *iter;
-            if (!exec_ctxt.is_r_context()) {
-                fresh = fresh && (exec_ctxt.get_call()->get_environment() != rho); 
-            }
-        }
-        return fresh;
-    }
-
-
-    void push_assignment_stack(SEXP symbol, SEXP env, sexptype_t type, SEXP calling_env) {
-        assignment_stack_.push_back(AssignmentState(symbol,env, type, calling_env));
-    }
-    
-    AssignmentState& peek_assignment_stack() {
-        return assignment_stack_[assignment_stack_.size() - 1];
-    }
-    
-    bool assignment_stack_is_empty() {
-        return assignment_stack_.size() == 0;
-    }
-
-    void pop_assignment_stack() {
-        assignment_stack_.pop_back();
+    AssignmentStateStack& get_assignment_stack_() {
+        return assignement_state_stack_;
     }
   
   

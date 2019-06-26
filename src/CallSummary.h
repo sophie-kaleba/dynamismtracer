@@ -14,6 +14,11 @@ class CallSummary {
         S4_method_ = call->is_S4_method();
         call_count_ = 1;
         dynamic_call_count_ = call->is_dynamic_call();
+        redefining_ = call->is_redefining_symbol();
+        symbol_name_ = call->get_symbol_name();
+        symbol_type_ = call->get_symbol_type();
+        environment_address_ = call->get_environment();
+        from_fresh_environment_ = call->from_fresh_environment();
     }
 
     const pos_seq_t& get_force_order() const {
@@ -48,15 +53,38 @@ class CallSummary {
         return dynamic_call_count_;
     }
 
+    int get_redefining() const {
+        return redefining_;
+    }
+
     bool try_to_merge(const Call* const call) {
         if (is_mergeable_(call)) {
             call_count_++;
             if (call->is_dynamic_call()) {
                 dynamic_call_count_++;
             }
+            if (call->is_redefining_symbol()) {
+                redefining_++;
+            }
             return true;
         }
         return false;
+    }
+
+    std::string get_symbol_name() const {
+        return symbol_name_;
+    }
+
+    sexptype_t get_symbol_type() const {
+        return symbol_type_;
+    }
+
+    SEXP get_environment_address() const {
+        return environment_address_;
+    }
+
+    bool from_fresh_environment() const {
+        return from_fresh_environment_;
     }
 
   private:
@@ -68,6 +96,11 @@ class CallSummary {
     bool S4_method_;
     int call_count_;
     int dynamic_call_count_;
+    int redefining_;
+    std::string symbol_name_;
+    sexptype_t symbol_type_;
+    SEXP environment_address_;
+    bool from_fresh_environment_;
 
     bool is_mergeable_(const Call* const call) const {
         return (get_force_order() == call->get_force_order() &&
