@@ -17,8 +17,8 @@ class CallSummary {
         redefining_ = call->is_redefining_symbol();
         symbol_name_ = call->get_symbol_name();
         symbol_type_ = call->get_symbol_type();
-        environment_address_ = call->get_environment();
-        from_fresh_environment_ = call->from_fresh_environment();
+        environment_address_ = call->get_assignment_environment();
+        to_fresh_environment_ = call->to_fresh_environment();
     }
 
     const pos_seq_t& get_force_order() const {
@@ -79,12 +79,12 @@ class CallSummary {
         return symbol_type_;
     }
 
-    SEXP get_environment_address() const {
+    int get_environment_address() const {
         return environment_address_;
     }
 
-    bool from_fresh_environment() const {
-        return from_fresh_environment_;
+    bool to_fresh_environment() const {
+        return to_fresh_environment_;
     }
 
   private:
@@ -99,8 +99,8 @@ class CallSummary {
     int redefining_;
     std::string symbol_name_;
     sexptype_t symbol_type_;
-    SEXP environment_address_;
-    bool from_fresh_environment_;
+    int environment_address_;
+    bool to_fresh_environment_;
 
     bool is_mergeable_(const Call* const call) const {
         return (get_force_order() == call->get_force_order() &&

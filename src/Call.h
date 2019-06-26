@@ -167,8 +167,12 @@ class Call {
         return symbol_type_;
     }
 
-    bool from_fresh_environment() const {
-        return from_fresh_environment_;
+    bool to_fresh_environment() const {
+        return to_fresh_environment_;
+    }
+
+    int get_assignment_environment() const {
+        return assignment_environment_;
     }
 
 
@@ -180,8 +184,12 @@ class Call {
         symbol_type_ = type_of_sexp(symbol);
     }
 
-    void set_from_fresh_environment(bool environment_state) {
-        from_fresh_environment_ = environment_state;
+    void set_to_fresh_environment(bool environment_state) {
+        to_fresh_environment_ = environment_state;
+    }
+
+    void set_assignment_environment(int rho_address) {
+        assignment_environment_ = rho_address;
     }
 
  
@@ -205,7 +213,8 @@ class Call {
     pos_seq_t force_order_;
     std::string symbol_name_;
     sexptype_t symbol_type_;
-    bool from_fresh_environment_;
+    bool to_fresh_environment_;
+    int assignment_environment_;
 };
 
 #endif /* DYNAMISMTRACER_CALL_H */

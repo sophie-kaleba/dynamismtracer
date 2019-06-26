@@ -90,7 +90,7 @@ class TracerState {
              "redefining_symbol", 
              "symbol_name",
              "environment_address",
-             "fresh_environment"},
+             "to fresh_environment"},
             truncate_,
             binary_,
             compression_level_);
@@ -1064,8 +1064,8 @@ class TracerState {
                     call_summary.get_dynamic_call_count(),
                     call_summary.get_redefining(),
                     call_summary.get_symbol_name(),
-                    call_summary.get_environment_address(),
-                    call_summary.from_fresh_environment());
+                    int_to_hex_string(call_summary.get_environment_address()),
+                    call_summary.to_fresh_environment());
             }
         }
     }

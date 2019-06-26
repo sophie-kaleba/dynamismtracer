@@ -41,16 +41,18 @@ bool sexp_to_bool(SEXP value) {
     return LOGICAL(value)[0] == TRUE;
 }
 
-SEXP strsxp_to_sym(SEXP value) {
-    return Rf_install(CHAR(asChar(value)));
-}
-
 int sexp_to_int(SEXP value) {
     return (int) *INTEGER(value);
 }
 
 std::string sexp_to_string(SEXP value) {
     return std::string(CHAR(STRING_ELT(value, 0)));
+}
+
+std::string int_to_hex_string(int n) {
+    std::stringstream stream;
+    stream << "0x" << std::hex << n;
+    return stream.str() ;
 }
 
 const char* get_name(SEXP sexp) {
