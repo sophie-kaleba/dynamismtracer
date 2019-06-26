@@ -175,6 +175,9 @@ class Call {
         return assignment_environment_;
     }
 
+    bool to_package_environment() const {
+        return to_package_environment_;
+    }
 
     void set_symbol_name(SEXP symbol) {
         symbol_name_ = to_string(get_name(symbol));
@@ -184,12 +187,16 @@ class Call {
         symbol_type_ = type_of_sexp(symbol);
     }
 
-    void set_to_fresh_environment(bool environment_state) {
-        to_fresh_environment_ = environment_state;
+    void set_to_fresh_environment() {
+        to_fresh_environment_ = true;
     }
 
     void set_assignment_environment(int rho_address) {
         assignment_environment_ = rho_address;
+    }
+
+    void set_to_package_environment() {
+        to_package_environment_ = true;
     }
 
  
@@ -215,6 +222,7 @@ class Call {
     sexptype_t symbol_type_;
     bool to_fresh_environment_;
     int assignment_environment_;
+    bool to_package_environment_;
 };
 
 #endif /* DYNAMISMTRACER_CALL_H */

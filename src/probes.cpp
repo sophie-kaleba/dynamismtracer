@@ -364,9 +364,14 @@ void environment_variable_define(dyntracer_t* dyntracer,
         Call * assignment_call = state.get_parent_call(type, 1); 
 
         assignment_call->set_dynamic_call();
+
         assignment_call->set_symbol_name(symbol);
+
         assignment_call->set_assignment_environment(sexp_to_int(rho));
-        assignment_call->set_to_fresh_environment(state.is_fresh_environment(rho));
+
+        if (state.is_fresh_environment(rho)) assignment_call->set_to_fresh_environment();
+        
+        if (R_IsPackageEnv(rho)) assignment_call->set_to_package_environment();
 
         if (state.get_assignment_stack_().peek().get_caller_environment() != R_GlobalEnv) {
             Call * parent_call = state.get_caller();
@@ -400,10 +405,16 @@ void environment_variable_assign(dyntracer_t* dyntracer,
         Call * assignment_call = state.get_parent_call(type, 1); 
 
         assignment_call->set_dynamic_call();
+
         assignment_call->set_redefining();
+
         assignment_call->set_symbol_name(symbol);
+
         assignment_call->set_assignment_environment(sexp_to_int(rho));
-        assignment_call->set_to_fresh_environment(state.is_fresh_environment(rho));
+
+        if (state.is_fresh_environment(rho)) assignment_call->set_to_fresh_environment();
+
+        if (R_IsPackageEnv(rho)) assignment_call->set_to_package_environment();
 
         if (state.get_assignment_stack_().peek().get_caller_environment() != R_GlobalEnv) {
             Call * parent_call = state.get_caller();

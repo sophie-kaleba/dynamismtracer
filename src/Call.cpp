@@ -21,6 +21,7 @@ Call::Call(const call_id_t id,
     , dynamic_call_(false)
     , redefining_(false)
     , to_fresh_environment_(false)
+    , to_package_environment_(false)
     , symbol_name_("")
     , assignment_environment_(0) {
     wrapper_ = function_->is_dot_internal() || function_->is_dot_primitive() ||

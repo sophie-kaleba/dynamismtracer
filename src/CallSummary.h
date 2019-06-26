@@ -18,6 +18,7 @@ class CallSummary {
         symbol_name_ = call->get_symbol_name();
         symbol_type_ = call->get_symbol_type();
         environment_address_ = call->get_assignment_environment();
+        to_package_environment_ = call->to_package_environment();
         to_fresh_environment_ = call->to_fresh_environment();
     }
 
@@ -87,6 +88,10 @@ class CallSummary {
         return to_fresh_environment_;
     }
 
+    bool to_package_environment() const {
+        return to_package_environment_;
+    }
+
   private:
     pos_seq_t force_order_;
     pos_seq_t missing_argument_positions_;
@@ -101,6 +106,7 @@ class CallSummary {
     sexptype_t symbol_type_;
     int environment_address_;
     bool to_fresh_environment_;
+    bool to_package_environment_;
 
     bool is_mergeable_(const Call* const call) const {
         return (get_force_order() == call->get_force_order() &&
