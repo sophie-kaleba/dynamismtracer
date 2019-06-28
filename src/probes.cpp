@@ -370,16 +370,25 @@ void environment_variable_define(dyntracer_t* dyntracer,
         assignment_call->set_assignment_environment(sexp_to_int(rho));
 
         if (state.is_fresh_environment(rho)) assignment_call->set_to_fresh_environment();
-        
+
         if (R_IsPackageEnv(rho)) assignment_call->set_to_package_environment();
 
         if (state.get_assignment_stack_().peek().get_caller_environment() != R_GlobalEnv) {
+
             Call * parent_call = state.get_caller();
+
+            function_id_t parent_id = parent_call->get_function()->get_id();
+
+            assignment_call->set_parent_id(parent_id);
 
             state.serialize_dynamic_function_definition_(parent_call->get_function(), parent_call->get_function_name());
         }
         else {
             // the function has been called from the global environment
+            function_id_t parent_id = "GlobalScope";
+
+            assignment_call->set_parent_id(parent_id);
+            
             state.serialize_dynamic_function_definition_(assignment_call->get_function(), "called from global scope");
         }
     }
@@ -419,10 +428,18 @@ void environment_variable_assign(dyntracer_t* dyntracer,
         if (state.get_assignment_stack_().peek().get_caller_environment() != R_GlobalEnv) {
             Call * parent_call = state.get_caller();
 
+            function_id_t parent_id = parent_call->get_function()->get_id();
+
+            assignment_call->set_parent_id(parent_id);
+
             state.serialize_dynamic_function_definition_(parent_call->get_function(), parent_call->get_function_name());
         }
         else {
             // the function has been called from the global environment
+            function_id_t parent_id = "GlobalScope";
+
+            assignment_call->set_parent_id(parent_id);
+
             state.serialize_dynamic_function_definition_(assignment_call->get_function(), "called from global scope");
         }
     }

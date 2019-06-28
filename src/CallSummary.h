@@ -20,6 +20,7 @@ class CallSummary {
         environment_address_ = call->get_assignment_environment();
         to_package_environment_ = call->to_package_environment();
         to_fresh_environment_ = call->to_fresh_environment();
+        parent_id_ = call->get_parent_id();
     }
 
     const pos_seq_t& get_force_order() const {
@@ -92,6 +93,10 @@ class CallSummary {
         return to_package_environment_;
     }
 
+    function_id_t get_parent_id() const {
+        return parent_id_;
+    }
+
   private:
     pos_seq_t force_order_;
     pos_seq_t missing_argument_positions_;
@@ -107,6 +112,7 @@ class CallSummary {
     int environment_address_;
     bool to_fresh_environment_;
     bool to_package_environment_;
+    function_id_t parent_id_;
 
     bool is_mergeable_(const Call* const call) const {
         return (get_force_order() == call->get_force_order() &&

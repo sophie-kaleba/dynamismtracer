@@ -179,6 +179,10 @@ class Call {
         return to_package_environment_;
     }
 
+    function_id_t get_parent_id() const {
+        return parent_id_;
+    }
+
     void set_symbol_name(SEXP symbol) {
         symbol_name_ = to_string(get_name(symbol));
     }
@@ -197,6 +201,10 @@ class Call {
 
     void set_to_package_environment() {
         to_package_environment_ = true;
+    }
+
+    void set_parent_id(function_id_t id) {
+        parent_id_ = id;
     }
 
  
@@ -223,6 +231,7 @@ class Call {
     bool to_fresh_environment_;
     int assignment_environment_;
     bool to_package_environment_;
+    function_id_t parent_id_;
 };
 
 #endif /* DYNAMISMTRACER_CALL_H */
