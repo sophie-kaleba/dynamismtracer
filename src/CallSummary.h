@@ -21,6 +21,7 @@ class CallSummary {
         to_package_environment_ = call->to_package_environment();
         to_fresh_environment_ = call->to_fresh_environment();
         parent_id_ = call->get_parent_id();
+        location_ = call->get_location();
     }
 
     const pos_seq_t& get_force_order() const {
@@ -57,6 +58,10 @@ class CallSummary {
 
     int get_redefining() const {
         return redefining_;
+    }
+
+    std::string get_location() const {
+        return location_;
     }
 
     bool try_to_merge(const Call* const call) {
@@ -113,6 +118,7 @@ class CallSummary {
     bool to_fresh_environment_;
     bool to_package_environment_;
     function_id_t parent_id_;
+    std::string location_;
 
     bool is_mergeable_(const Call* const call) const {
         return (get_force_order() == call->get_force_order() &&

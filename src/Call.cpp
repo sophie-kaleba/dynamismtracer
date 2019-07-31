@@ -23,7 +23,8 @@ Call::Call(const call_id_t id,
     , to_fresh_environment_(false)
     , to_package_environment_(false)
     , symbol_name_("")
-    , assignment_environment_(0) {
+    , assignment_environment_(0)
+    , location_("") {
     wrapper_ = function_->is_dot_internal() || function_->is_dot_primitive() ||
                function_->is_dot_c() || function_->is_dot_fortran() ||
                function_->is_dot_external() || function_->is_dot_external2() ||

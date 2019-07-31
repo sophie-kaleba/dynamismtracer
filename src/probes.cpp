@@ -1,3 +1,5 @@
+#define UNW_LOCAL_ONLY
+
 #include "probes.h"
 
 #include "TracerState.h"
@@ -346,6 +348,79 @@ void context_entry(dyntracer_t* dyntracer, const RCNTXT* cptr) {
     state.exit_probe(Event::ContextEntry);
 }
 
+void R_backtrace() {
+  unw_cursor_t cursor;
+  unw_context_t context;
+  unw_proc_info_t pip;
+
+  // Initialize cursor to current frame for local unwinding.
+  unw_getcontext(&context);
+  unw_init_local(&cursor, &context);
+
+  // Unwind frames one by one, going up the frame stack.
+  while (unw_step(&cursor) > 0) {
+    unw_word_t offset, pc;
+    unw_get_reg(&cursor, UNW_REG_IP, &pc);
+    if (pc == 0) {
+      break;
+    }
+    // std::printf("0x%lx:", pc);
+
+    // char sym[256];
+    // if (unw_get_proc_name(&cursor, sym, sizeof(sym), &offset) == 0) {
+    //   char* nameptr = sym;
+    //   std::printf(" (%s+0x%lx)\n", nameptr, offset);
+    // } else {
+    //   std::printf(" -- error: unable to obtain symbol name for this frame\n");
+    // }
+
+    if (unw_get_proc_info(&cursor, &pip) == 0) {
+        pip.start_ip;
+    }
+  }
+}
+
+SEXP getCustomCurrentSrcref(int skip, const RCNTXT *c, SEXP srcref)
+{
+    const RCNTXT *c_aux = c; // might not work
+    SEXP srcref_aux = srcref;
+    if (skip < 0) { /* to count up from the bottom, we need to count them all first */
+	while (c) {
+	    if (srcref && srcref != R_NilValue)
+		skip++;
+	    srcref = c->srcref;
+	    c = c->nextcontext;
+	};
+	if (skip < 0) return R_NilValue; /* not enough there */
+	c = c_aux;
+	srcref = srcref_aux;
+    }
+    while (c && (skip || !srcref || srcref == R_NilValue)) {
+	if (srcref && srcref != R_NilValue)
+	    skip--;
+	srcref = c->srcref;
+	c = c->nextcontext;
+    }
+    if (skip || !srcref)
+	srcref = R_NilValue;
+    return srcref;
+}
+
+std::string get_filename_and_code_line() {
+
+        SEXP current_srcref = R_GetCurrentSrcref(0);
+
+        dyntrace_probe_environment_variable_lookup_disabled = 1;
+        SEXP raw_filename = R_GetSrcFilename(current_srcref);
+        dyntrace_probe_environment_variable_lookup_disabled = 0;
+
+        const char * filename = CHAR(asChar(raw_filename)); 
+
+        int line = INTEGER(current_srcref)[0];
+        
+        return to_string(filename) +'#' + std::to_string(line);
+}
+
 void environment_variable_define(dyntracer_t* dyntracer,
                                  const SEXP symbol,
                                  const SEXP value,
@@ -359,6 +434,7 @@ void environment_variable_define(dyntracer_t* dyntracer,
     and (state.get_assignment_stack_().peek().get_caller_environment() != rho)
     and (type_of_sexp(value) == CLOSXP))     
     {
+
         sexptype_t type = state.get_assignment_stack_().peek().get_type();
 
         Call * assignment_call = state.get_parent_call(type, 1); 
@@ -366,6 +442,21 @@ void environment_variable_define(dyntracer_t* dyntracer,
         assignment_call->set_dynamic_call();
 
         assignment_call->set_symbol_name(symbol);
+
+        // R_backtrace();
+
+        // SEXP op = assignment_call->get_function()->get_op();
+        // SEXP srcref = getAttrib(op, R_SrcrefSymbol);
+
+        assignment_call->set_location(get_filename_and_code_line());
+        // SEXP current_srcref = getCustomCurrentSrcref(0, state.get_last_context(), srcref);
+        // dyntrace_probe_environment_variable_lookup_disabled = 1;
+        // SEXP raw_filename = R_GetSrcFilename(current_srcref);
+        // dyntrace_probe_environment_variable_lookup_disabled = 0;
+        // const char * filename = CHAR(asChar(raw_filename));
+
+        // int line = INTEGER(R_GetCurrentSrcref(0))[0];
+        // std::cout << filename << "#" << line << "\n";
 
         assignment_call->set_assignment_environment(sexp_to_int(rho));
 
@@ -418,6 +509,19 @@ void environment_variable_assign(dyntracer_t* dyntracer,
         assignment_call->set_redefining();
 
         assignment_call->set_symbol_name(symbol);
+
+        // SEXP op = assignment_call->get_function()->get_op();
+        // SEXP srcref = getAttrib(op, R_SrcrefSymbol);
+
+        assignment_call->set_location(get_filename_and_code_line());
+        // SEXP current_srcref = getCustomCurrentSrcref(0, state.get_last_context(), srcref);
+        // dyntrace_probe_environment_variable_lookup_disabled = 1;
+        // SEXP raw_filename = R_GetSrcFilename(current_srcref);
+        // dyntrace_probe_environment_variable_lookup_disabled = 0;
+        // const char * filename = CHAR(asChar(raw_filename));
+
+        // int line = INTEGER(R_GetCurrentSrcref(0))[0];
+        // std::cout << filename << "#" << line << "\n";
 
         assignment_call->set_assignment_environment(sexp_to_int(rho));
 

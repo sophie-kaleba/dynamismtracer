@@ -16,6 +16,7 @@ class Function {
                       const std::string& definition,
                       const function_id_t& id)
         : formal_parameter_count_(0)
+        , op_(op)
         , wrapper_(true)
         , namespace_(package_name)
         , definition_(definition)
@@ -46,6 +47,10 @@ class Function {
 
     sexptype_t get_type() const {
         return type_;
+    }
+
+    SEXP get_op() const {
+        return op_;
     }
 
     bool is_closure() const {
@@ -211,6 +216,7 @@ class Function {
     function_id_t id_;
     int primitive_offset_;
     bool byte_compiled_;
+    SEXP op_;
 
     std::vector<std::string> names_;
     std::vector<CallSummary> call_summaries_;

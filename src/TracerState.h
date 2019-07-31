@@ -92,7 +92,8 @@ class TracerState {
              "environment_address",
              "to_fresh_environment",
              "to_package_environment",
-             "parent_id"},
+             "parent_id",
+             "location"},
             truncate_,
             binary_,
             compression_level_);
@@ -1069,7 +1070,8 @@ class TracerState {
                     int_to_hex_string(call_summary.get_environment_address()),
                     call_summary.to_fresh_environment(),
                     call_summary.to_package_environment(),
-                    call_summary.get_parent_id());
+                    call_summary.get_parent_id(),
+                    call_summary.get_location());
             }
         }
     }
@@ -1322,7 +1324,20 @@ class TracerState {
             }
         }
         return fresh;
-}
+    }
+
+    const RCNTXT* get_last_context() {
+        const RCNTXT* last_context = nullptr;
+        ExecutionContextStack& stack = get_stack_();
+
+        for (auto iter = stack.rbegin(); iter != stack.rend(); ++iter) {
+            ExecutionContext& exec_ctxt = *iter;
+            if (exec_ctxt.is_r_context()) {
+                return exec_ctxt.get_r_context(); }
+        }
+
+        return last_context;
+    }
 
 
     eval_depth_t get_evaluation_depth(Call* call) {

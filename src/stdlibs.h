@@ -15,8 +15,12 @@
 
 #include <config.h>
 #include <stdint.h>
+#include <libunwind.h>
+#include <cstdio>
+#include <cstdlib>
 #define R_USE_SIGNALS 1
 #define HAVE_DECL_SIZE_MAX 1
+#define UNW_LOCAL_ONLY
 extern "C" {
 #include <Defn.h>
 #include <Rdyntrace.h>

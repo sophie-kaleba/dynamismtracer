@@ -183,6 +183,10 @@ class Call {
         return parent_id_;
     }
 
+    std::string get_location() const {
+        return location_;
+    }
+
     void set_symbol_name(SEXP symbol) {
         symbol_name_ = to_string(get_name(symbol));
     }
@@ -205,6 +209,10 @@ class Call {
 
     void set_parent_id(function_id_t id) {
         parent_id_ = id;
+    }
+
+    void set_location(std::string location) {
+        location_ = location;
     }
 
  
@@ -232,6 +240,7 @@ class Call {
     int assignment_environment_;
     bool to_package_environment_;
     function_id_t parent_id_;
+    std::string location_;
 };
 
 #endif /* DYNAMISMTRACER_CALL_H */
